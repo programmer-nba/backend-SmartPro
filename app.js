@@ -31,6 +31,8 @@ app.use(prefix+'/', require('./routes/index'));
 app.use(prefix+'/user',require('./routes/user/user'))
 //ล็อคอิน
 app.use(prefix+'/login',require('./routes/user/login'))
+// supplier ผู้จัดหาสินค้า
+app.use(prefix+'/supplier',require("./routes/supplier/supplier"))
 
 
 app.use((req, res, next) => {

@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../../models/user.schema");
+const User = require("../../models/user/user.schema");
 const multer = require("multer");
 const {
   uploadFileCreate,
