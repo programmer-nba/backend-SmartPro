@@ -4,11 +4,13 @@ const mongoose = require("mongoose");
 const productSchema = new mongoose.Schema(
   {
     name:{type:String,required: true}, // (ชื่อสินค้า)
-    price :{type:Number,required: true}, //(ราคา)
     brand:{type: mongoose.Schema.Types.ObjectId,ref:'brand',required:true}, //(แบรนด์)
     image:{type:String,required: true}, //(รูปภาพ)
     producttype:{type: mongoose.Schema.Types.ObjectId,ref:'producttype',required:true}, //(ประเภทสินค้า)
-    supplier_id :{type: mongoose.Schema.Types.ObjectId,ref:'supplier',required:true} , //(id ผู้จัดหาสินค้า)
+    supplier :{type:[{
+      supplier_id:{type: mongoose.Schema.Types.ObjectId,ref:'supplier'},
+      price :{type:Number}
+    }],default:[]} , //(id ผู้จัดหาสินค้า)
   },
   {timestamps: true}
 );

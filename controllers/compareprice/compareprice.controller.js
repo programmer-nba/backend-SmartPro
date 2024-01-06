@@ -1,11 +1,14 @@
-const Brand = require("../../models/product/brand.schema") 
+const Compareprice = require("../../models/compareprice/compareprice.schema")
 
-//เพิ่ม brand
+//เพิ่มใบเปรียบเทียบราคา
 module.exports.add = async (req, res) => {
   try {
-    const {name} = req.body
-    const data = new Brand({
-        name:name, //(ชื่อ)
+    const {customer_id,user_id,productdetail} = req.body
+    const data = new ({
+        customer_id:customer_id,
+        user_id:user_id,
+        refno:"",
+        productdetail:productdetail
       });
       const add = await data.save();
       return res.status(200).send({status: true,message:"คุณได้เพิ่มข้อมูล brand",data: add});
