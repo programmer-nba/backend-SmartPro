@@ -4,14 +4,31 @@ const Compareprice = require("../../models/compareprice/compareprice.schema")
 module.exports.add = async (req, res) => {
   try {
     const {customer_id,user_id,productdetail} = req.body
-    const data = new ({
+    // gen อ้างอิง
+    const startDate = new Date();
+    // สร้างวันที่ของวันถัดไป
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + 1);
+    // ปรับเวลาให้เป็นเริ่มต้นของวัน
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(0, 0, 0, 0);
+    const comparepricedata = await Compareprice.find({
+        createdAt: {
+          $gte: startDate,
+          $lt: endDate
+        }
+      });
+    const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const referenceNumber = String(comparepricedata.length).padStart(5, '0')
+    const refno = `${currentDate}${referenceNumber}`
+    const data = new Compareprice({
         customer_id:customer_id,
         user_id:user_id,
-        refno:"",
+        refno:refno,
         productdetail:productdetail
       });
       const add = await data.save();
-      return res.status(200).send({status: true,message:"คุณได้เพิ่มข้อมูล brand",data: add});
+      return res.status(200).send({status: true,message:"คุณได้เพิ่มข้อมูลใบเปรียบเทียบราคา",data: add});
   } catch (error) {
     return res.status(500).send({ status: false, error: error.message });
   }
@@ -20,11 +37,17 @@ module.exports.add = async (req, res) => {
 //ดึงข้อมูลทั้งหมด
 module.exports.getall = async (req, res) => {
   try {
-    const branddata = await Brand.find();
-    if (!branddata) {
-      return res.status(404).send({ status: false, message: "ไม่มีข้อมูล Brand" });
+    const comparepricedata = await Compareprice.find()
+    .populate('customer_id')
+    .populate('user_id')
+    .populate('productdetail.product_id')
+    .populate('productdetail.brand')
+    .populate('productdetail.producttype')
+    .populate('productdetail.supplier.supplier_id');
+    if (!comparepricedata) {
+      return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเปรียบเทียบราคา" });
     }
-    return res.status(200).send({ status: true, data: branddata });
+    return res.status(200).send({ status: true, data: comparepricedata });
   } catch (error) {
     return res.status(500).send({ status: false, error: error.message });
   }
@@ -33,45 +56,49 @@ module.exports.getall = async (req, res) => {
 //ดึงข้อมูล by id
 module.exports.getbyid = async (req, res) => {
   try {
-    const branddata = await Brand.findOne({ _id: req.params.id });
-    if (!branddata) {
-      return res.status(404).send({ status: false, message: "ไม่มีข้อมูล Brand" });
+    const comparepricedata = await Compareprice.findOne({ _id: req.params.id }).populate('customer_id')
+    .populate('user_id')
+    .populate('productdetail.product_id')
+    .populate('productdetail.brand')
+    .populate('productdetail.producttype')
+    .populate('productdetail.supplier.supplier_id');
+    if (!comparepricedata) {
+      return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเปรียบเทียบราคา" });
     }
-    return res.status(200).send({ status: true, data: branddata });
+    return res.status(200).send({ status: true, data: comparepricedata });
   } catch (error) {
     return res.status(500).send({ status: false, error: error.message });
   }
 };
 
-//แก้ไขข้อมูล brand
+//แก้ไขข้อมูลใบเปรียบเทียบราคา
 module.exports.edit = async (req, res) => {
   try {
     const id = req.params.id
-    const branddata = await Brand.findById(id)
-    if (!branddata) {
-        return res.status(404).send({ status: false, message: "ไม่มีข้อมูล Brand" });
+    const comparepricedata = await Compareprice.findById(id)
+    if (!comparepricedata) {
+        return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเปรียบเทียบราคา" });
     }
-    const {name} = req.body
-    
+    const {productdetail} = req.body
     const data = {
-        name:name, //(ชื่อ)
+      productdetail:productdetail, //(ชื่อ)
     }
-    const edit = await Brand.findByIdAndUpdate(id,data,{new:true})
-    return res.status(200).send({status: true,message: "คุณได้แก้ไขข้อมูล Brand เรียบร้อย",data: edit});
+    const edit = await Compareprice.findByIdAndUpdate(id,data,{new:true})
+    return res.status(200).send({status: true,message: "คุณได้แก้ไขข้อมูลใบเปรียบเทียบราคาเรียบร้อย",data: edit});
   } catch (error) {
     return res.status(500).send({ status: false, error: error.message });
   }
 };
 
-//ลบข้อมูล brand
+//ลบข้อมูลใบเปรียบเทียบราคา
 module.exports.delete = async (req, res) => {
   try {
     const id = req.params.id
-    const branddata = await Brand.findOne({ _id: id });
-    if (!branddata) {
-      return res.status(200).send({ status: false, message: "ไม่มีข้อมูล brand" });
+    const comparepricedata = await Compareprice.findOne({ _id: id });
+    if (!comparepricedata) {
+      return res.status(200).send({ status: false, message: "ไม่มีข้อมูลใบเปรียบเทียบราคา" });
     }
-    const deletesupplier = await Brand.findByIdAndDelete(req.params.id);
+    const deletesupplier = await Compareprice.findByIdAndDelete(id);
     return res.status(200).send({ status: true, message: "ลบข้อมูลสำเร็จ", data: deletesupplier });
   } catch (error) {
     return res.status(500).send({ status: false, error: error.message });

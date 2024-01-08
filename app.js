@@ -44,7 +44,8 @@ app.use(prefix+'/customer',require("./routes/customer/customer"))
 app.use(prefix+'/supplier',require("./routes/supplier/supplier"))
 // product supplier เพิ่มสินค้าของผู้จัดหาสินค้า
 app.use(prefix+'/productsupplier',require("./routes/supplier/productsupplier"))
-
+// ทำใบเปรียบเทียบราคา
+app.use(prefix+'/compareprice',require("./routes/compareprice/compareprice"))
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); // หรือกำหนด origin ที่เฉพาะเจาะจง
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
