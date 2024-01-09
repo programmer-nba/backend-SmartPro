@@ -5,7 +5,7 @@ const productSchema = new mongoose.Schema(
   {
     name:{type:String,required: true}, // (ชื่อสินค้า)
     brand:{type: mongoose.Schema.Types.ObjectId,ref:'brand',required:true}, //(แบรนด์)
-    image:{type:String,required: true}, //(รูปภาพ)
+    image:{type:String,default:null}, //(รูปภาพ)
     producttype:{type: mongoose.Schema.Types.ObjectId,ref:'producttype',required:true}, //(ประเภทสินค้า)
     supplier :{type:[{
       supplier_id:{type: mongoose.Schema.Types.ObjectId,ref:'supplier'},
