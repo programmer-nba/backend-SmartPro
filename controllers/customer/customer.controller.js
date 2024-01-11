@@ -3,7 +3,7 @@ const Customer = require("../../models/customer/customer.schema");
 //เพิ่มลูกค้า
 module.exports.add = async (req, res) => {
   try {
-    const {name,typecustomer,address,province,amphure,tambon,email,contact,telephone} = req.body
+    const {name,typecustomer,address,province,amphure,tambon,email,contact,telephone,zipcode} = req.body
     const data = new Customer({
         name:name, //(ชื่อบริษัท หรือ คนลูกค้า)
         typecustomer:typecustomer, //(ประเภทลูกค้า เช่น ในประเทศ , นอกประเทศ)
@@ -11,6 +11,7 @@ module.exports.add = async (req, res) => {
         province:province, //(จังหวัด)
         amphure:amphure, //(อำเภอ)
         tambon: tambon, //(ตำบล)
+        zipcode:zipcode,
         email:email, //(อีเมล์)
         contact:contact, //(ผู้ติดต่อ)
         telephone:telephone, //(เบอร์โทรศัพท์)
@@ -58,7 +59,7 @@ module.exports.edit = async (req, res) => {
     if (!customerdata) {
         return res.status(404).send({ status: false, message: "ไม่มีข้อมูลลูกค้า" });
     }
-    const {name,typecustomer,address,province,amphure,tambon,email,contact,telephone} = req.body
+    const {name,typecustomer,address,province,amphure,tambon,email,contact,telephone,zipcode} = req.body
     const data = {
         name:name, //(ชื่อบริษัท หรือ คนลูกค้า)
         typecustomer:typecustomer, //(ประเภทลูกค้า เช่น ในประเทศ , นอกประเทศ)
@@ -66,6 +67,7 @@ module.exports.edit = async (req, res) => {
         province:province, //(จังหวัด)
         amphure:amphure, //(อำเภอ)
         tambon: tambon, //(ตำบล)
+        zipcode:zipcode,
         email:email, //(อีเมล์)
         contact:contact, //(ผู้ติดต่อ)
         telephone:telephone, //(เบอร์โทรศัพท์)

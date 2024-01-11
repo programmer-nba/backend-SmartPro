@@ -3,7 +3,7 @@ const Supplier = require("../../models/supplier/supplier.schema");
 //เพิ่ม supplier
 module.exports.add = async (req, res) => {
   try {
-    const {name,email,contact,telephone,address,province,amphure,tambon,website} = req.body
+    const {name,email,contact,telephone,address,province,amphure,tambon,zipcode,website} = req.body
     const data = new Supplier({
         name:name, //(ชื่อบริษัทของ supplier)
         email:email, //(อีเมล์)
@@ -13,6 +13,7 @@ module.exports.add = async (req, res) => {
         province: province, //(จังหวัด)
         amphure:amphure, //(อำเภอ)
         tambon : tambon,//(ตำบล)
+        zipcode:zipcode, //เลขไปรษณีย์
         website : website, //(เว็บไซต์)
       });
       const add = await data.save();
@@ -57,7 +58,7 @@ module.exports.edit = async (req, res) => {
     if (!supplierdata) {
         return res.status(404).send({ status: false, message: "ไม่มีข้อมูล Supplier" });
     }
-    const {name,email,contact,telephone,address,province,amphure,tambon,website} = req.body
+    const {name,email,contact,telephone,address,province,amphure,tambon,zipcode,website} = req.body
     
     const data = {
         name:name, //(ชื่อบริษัทของ supplier)
@@ -68,6 +69,7 @@ module.exports.edit = async (req, res) => {
         province: province, //(จังหวัด)
         amphure:amphure, //(อำเภอ)
         tambon : tambon,//(ตำบล)
+        zipcode:zipcode, //เลขไปรษณีย์
         website : website, //(เว็บไซต์)
     }
     const edit = await Supplier.findByIdAndUpdate(id,data,{new:true})

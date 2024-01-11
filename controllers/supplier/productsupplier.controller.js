@@ -27,12 +27,37 @@ module.exports.add = async (req, res) => {
     return res.status(500).send({ status: false, error: error.message });
   }
 };
-
+module.exports.addmany = async (req, res) => {
+  try {
+    const supplier_id = req.params.id
+    const product = req.body.product
+    for (const element of product) {
+        const productData = await Product.findOne({ _id: element.product_id });
+        if(productData!=undefined)
+        {
+          const data = productData.supplier.filter(item=> item.supplier_id != supplier_id)
+          const supplierdata = {
+            supplier_id:supplier_id,
+            price:element.price
+          }
+          data.push(supplierdata)
+          const edit = await Product.findByIdAndUpdate(element.product_id,{supplier:data},{new:true})
+        }
+    }
+    
+    return res.status(200).send({status: true,message:"คุณได้เพิ่มข้อมูลสินค้า supplier แล้ว",data: product});
+  } catch (error) {
+    return res.status(500).send({ status: false, error: error.message });
+  }
+};
 //ดึงข้อมูลตาม product supplier
 module.exports.getbyid = async (req, res) => {
   try {
     const id = req.params.id
-    const productdata = await Product.find({"supplier.supplier_id":id});
+    const productdata = await Product.find({"supplier.supplier_id":id})
+    .populate({ path: "brand", select: "name" })
+    .populate({ path: "producttype", select: "name" })
+    .populate({ path: "supplier.supplier_id", select: "name" });
     if (!productdata) {
       return res.status(404).send({ status: false, message: "ไม่มีข้อมูล productdata " });
     }

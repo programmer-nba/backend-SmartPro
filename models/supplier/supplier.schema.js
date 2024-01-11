@@ -11,6 +11,7 @@ const supplierSchema = new mongoose.Schema(
     province:{type:String,required:true}, //(จังหวัด)
     amphure:{type:String,required:true}, //(อำเภอ)
     tambon:{type:String,required:true}, //(ตำบล)
+    zipcode:{type:String,required:true},// เลขไปรษณีย์
     website:{type:String,required:true} //(เว็บไซต์)
 
   },

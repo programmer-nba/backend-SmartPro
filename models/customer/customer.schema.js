@@ -9,6 +9,7 @@ const customerSchema = new mongoose.Schema(
     province:{type:String,required: true}, //(จังหวัด)
     amphure:{type:String,required: true}, //(อำเภอ)
     tambon:{type:String,required: true}, //(ตำบล)
+    zipcode:{type:String,required:true}, 
     email:{type:String,required: true}, //(อีเมล์)
     contact:{type:String,required: true}, //(ผู้ติดต่อ)
     telephone:{type:String,required: true}, //(เบอร์โทรศัพท์)

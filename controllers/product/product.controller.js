@@ -1,4 +1,6 @@
 const Product = require("../../models/product/product.schema");
+const Brand = require("../../models/product/brand.schema")
+const Producttype = require("../../models/product/producttype.schema")
 const multer = require("multer");
 const {
   uploadFileCreate,
@@ -34,10 +36,23 @@ module.exports.add = async (req, res) => {
         }
         image = reqFiles[0];
       }
-      const { name, brand, producttype} = req.body;
+      let { name, brand, producttype,otherbrand,otherproducttype} = req.body;
+      if(brand =="อื่นๆ"){
+        const databrand = new Brand({
+          name:otherbrand
+        })
+        const savebrand = await databrand.save();
+        brand = savebrand._id
+      }
+      if(producttype == "อื่นๆ"){
+        const  dataproducttype = new Producttype({
+          name:otherproducttype
+        })
+        const saveproducttype =  await dataproducttype.save();
+        producttype = saveproducttype._id
+      }
       const data = new Product({
-        name: name, //(ชื่อสินค้า)
-       
+        name: name, //(ชื่อสินค้า) 
         brand: brand, //(แบรนด์)
         image: image, //(รูปภาพ)
         producttype: producttype, //(ประเภทสินค้า)
