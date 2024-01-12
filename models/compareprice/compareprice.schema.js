@@ -13,6 +13,7 @@ const comparepriceSchema = new mongoose.Schema(
         brand: {type: mongoose.Schema.Types.ObjectId,ref:'brand'},
         image:{type:String},
         producttype:{type:mongoose.Schema.Types.ObjectId,ref:'producttype'},
+        quantity:{type:Number,default:0},
         supplier:{type:[{
             supplier_id:{type: mongoose.Schema.Types.ObjectId,ref:'supplier'},
             price :{type:Number}
