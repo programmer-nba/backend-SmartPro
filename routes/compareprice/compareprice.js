@@ -9,6 +9,9 @@ router.post('/',auth.sales,compareprice.add)
 //ดึงข้อมูลทั้งหมด
 router.get('/',auth.all,compareprice.getall)
 
+//ดึงข้อมูล ตาม id ลูกค้า
+router.get("/bycustomer/:id",auth.all,compareprice.getcustomer)
+
 //ดึงข้อมูล by id
 router.get('/byid/:id',auth.all,compareprice.getbyid)
 

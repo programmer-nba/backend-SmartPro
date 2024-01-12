@@ -13,7 +13,7 @@ const customerSchema = new mongoose.Schema(
     email:{type:String,required: true}, //(อีเมล์)
     contact:{type:String,required: true}, //(ผู้ติดต่อ)
     telephone:{type:String,required: true}, //(เบอร์โทรศัพท์)
-    
+    taxcustomerid:{type:String} // เลขประจำตัวผู้เสียภาษี
   },
   {timestamps: true}
 );

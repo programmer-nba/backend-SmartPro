@@ -69,6 +69,7 @@ module.exports.add = async (req, res) => {
         lastname: req.body.lastname,
         nickname: req.body.nickname,
         position: req.body.position,
+        telephone:req.body.telephone,
         image: image,
       });
       
@@ -182,6 +183,7 @@ module.exports.edit = async (req, res) => {
         lastname: req.body.lastname,
         nickname: req.body.nickname,
         position: req.body.position,
+        telephone:req.body.telephone,
         image: (image !=''? image:user.image), //ถ้ามีส่งรูปมาให้แทนทีดว้ยรูปใหม่เลย แต่ถ้าไม่ได้ส่งมาใช้รูปเก่า
       }
 

@@ -53,6 +53,21 @@ module.exports.getall = async (req, res) => {
   }
 };
 
+module.exports.getcustomer = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const comparepricedata = await Compareprice.find({customer_id:id})
+    .populate('customer_id')
+    .populate('user_id')
+    .populate('productdetail.supplier.supplier_id');
+    if (!comparepricedata) {
+      return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเปรียบเทียบราคา" });
+    }
+    return res.status(200).send({ status: true, data: comparepricedata });
+  } catch (error) {
+    return res.status(500).send({ status: false, error: error.message });
+  }
+};
 //ดึงข้อมูล by id
 module.exports.getbyid = async (req, res) => {
   try {

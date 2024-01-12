@@ -3,7 +3,7 @@ const Customer = require("../../models/customer/customer.schema");
 //เพิ่มลูกค้า
 module.exports.add = async (req, res) => {
   try {
-    const {name,typecustomer,address,province,amphure,tambon,email,contact,telephone,zipcode} = req.body
+    const {name,typecustomer,address,province,amphure,tambon,email,contact,telephone,zipcode,taxcustomerid} = req.body
     const data = new Customer({
         name:name, //(ชื่อบริษัท หรือ คนลูกค้า)
         typecustomer:typecustomer, //(ประเภทลูกค้า เช่น ในประเทศ , นอกประเทศ)
@@ -15,6 +15,7 @@ module.exports.add = async (req, res) => {
         email:email, //(อีเมล์)
         contact:contact, //(ผู้ติดต่อ)
         telephone:telephone, //(เบอร์โทรศัพท์)
+        taxcustomerid:taxcustomerid,
       });
       const add = await data.save();
       return res.status(200).send({status: true,message:"คุณได้เพิ่มข้อมูลลูกค้า",data: add});
@@ -59,7 +60,7 @@ module.exports.edit = async (req, res) => {
     if (!customerdata) {
         return res.status(404).send({ status: false, message: "ไม่มีข้อมูลลูกค้า" });
     }
-    const {name,typecustomer,address,province,amphure,tambon,email,contact,telephone,zipcode} = req.body
+    const {name,typecustomer,address,province,amphure,tambon,email,contact,telephone,zipcode,taxcustomerid} = req.body
     const data = {
         name:name, //(ชื่อบริษัท หรือ คนลูกค้า)
         typecustomer:typecustomer, //(ประเภทลูกค้า เช่น ในประเทศ , นอกประเทศ)
@@ -71,6 +72,7 @@ module.exports.edit = async (req, res) => {
         email:email, //(อีเมล์)
         contact:contact, //(ผู้ติดต่อ)
         telephone:telephone, //(เบอร์โทรศัพท์)
+        taxcustomerid:taxcustomerid
     };
     const edit = await Customer.findByIdAndUpdate(id,data,{new:true})
     return res.status(200).send({status: true,message: "คุณได้แก้ไขข้อมูลลูกค้าเรียบร้อย",data: edit});
