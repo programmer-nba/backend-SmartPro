@@ -46,6 +46,9 @@ app.use(prefix+'/supplier',require("./routes/supplier/supplier"))
 app.use(prefix+'/productsupplier',require("./routes/supplier/productsupplier"))
 // ทำใบเปรียบเทียบราคา
 app.use(prefix+'/compareprice',require("./routes/compareprice/compareprice"))
+//ใบเสนอราคา
+app.use(prefix+'/quotation',require("./routes/quotation/quotation"))
+
 // Rate เรท
 app.use(prefix+'/rate',require("./routes/Rate/Rate"))
 app.use((req, res, next) => {

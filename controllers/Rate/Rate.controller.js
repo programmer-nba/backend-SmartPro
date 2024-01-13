@@ -3,9 +3,10 @@ const Rate = require("../../models/Rate/Rate.schema")
 //เพิ่ม Rate
 module.exports.add = async (req, res) => {
   try {
-    const {name,rateprice} = req.body
+    const {name,rateprice,symbol} = req.body
     const data = new Rate({
         name:name, //(ชื่อ)
+        symbol:symbol,
         rateprice:rateprice
       });
       const add = await data.save();
@@ -49,10 +50,11 @@ module.exports.edit = async (req, res) => {
     if (!ratedata) {
         return res.status(404).send({ status: false, message: "ไม่มีข้อมูล" });
     }
-    const {name,rateprice} = req.body
+    const {name,rateprice,symbol} = req.body
     
     const data = {
         name:name, //(ชื่อ)
+        symbol:symbol,
         rateprice:rateprice
     }
     const edit = await Rate.findByIdAndUpdate(id,data,{new:true})

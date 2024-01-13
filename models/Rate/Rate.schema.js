@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const RateSchema = new mongoose.Schema(
   {
     name:{type:String,required: true}, // (ชื่อสกุลเงิน)
+    symbol:{type:String,required:true},
     rateprice:{type:Number,required:true}
   },
   {timestamps: true}
