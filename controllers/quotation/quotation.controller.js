@@ -3,7 +3,7 @@ const Quotation = require("../../models/quotation/quotation.schema")
 //เพิ่มใบเสนอราคา
 module.exports.add = async (req, res) => {
   try {
-    const {customer_id,user_id,productdetail} = req.body
+    const {customer_id,user_id,productdetail,total,tax,alltotal} = req.body
     const startDate = new Date();
     // สร้างวันที่ของวันถัดไป
     const endDate = new Date();
@@ -32,6 +32,9 @@ module.exports.add = async (req, res) => {
             date:Date.now(),
         }],
         productdetail:productdetail,
+        total:total, //(ราคารวมสินค้า)
+        tax: tax, //(หักภาษี 7 %)
+        alltotal: alltotal //(ราคารวมทั้งหมด)
       });
 
       const add = await data.save();
@@ -92,10 +95,13 @@ module.exports.edit = async (req, res) => {
     if (!quotationdata) {
         return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
     }
-    const {productdetail} = req.body
+    const {productdetail,total,tax,alltotal} = req.body
     
     const data = {
         productdetail:productdetail,
+        total:total, //(ราคารวมสินค้า)
+        tax: tax, //(หักภาษี 7 %)
+        alltotal: alltotal //(ราคารวมทั้งหมด)
     }
     const edit = await Quotation.findByIdAndUpdate(id,data,{new:true})
     return res.status(200).send({status: true,message: "คุณได้แก้ไขข้อมูลใบเสนอราคาเรียบร้อย",data: edit});
@@ -128,7 +134,7 @@ module.exports.accept = async (req, res) => {
       if (!quotationdata) {
         return res.status(200).send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
       }
-      quotationdata.statusdetail.push({status:"รออนุมัติ",date:Date.now()})
+      quotationdata.statusdetail.push({status:"ออกใบเสนอราคาสำเร็จ",date:Date.now()})
       const data ={
         status:true,
         statusdetail:quotationdata.statusdetail

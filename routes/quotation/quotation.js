@@ -22,6 +22,6 @@ router.put('/:id',auth.sales,quotation.edit)
 router.delete('/:id',auth.sales,quotation.delete)
 
 //admin อนุมัติ
-router.put("/admin/accept",auth.verifyTokenadmin,quotation.accept)
+router.put("/admin/accept/:id",auth.verifyTokenadmin,quotation.accept)
 
 module.exports = router;
