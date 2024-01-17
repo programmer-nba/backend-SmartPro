@@ -3,18 +3,18 @@ const Supplier = require("../../models/supplier/supplier.schema");
 //เพิ่ม supplier
 module.exports.add = async (req, res) => {
   try {
-    const {name,email,contact,telephone,address,province,amphure,tambon,zipcode,website} = req.body
+    const {name,typeofbusiness,categoryofproducts,email,contact,telephone,address,country,remake,website} = req.body
     const data = new Supplier({
-        name:name, //(ชื่อบริษัทของ supplier)
-        email:email, //(อีเมล์)
-        contact:contact,//(ผู้ติดต่อ)
-        telephone:telephone ,//(เบอร์โทรศัพท์)
-        address:address, // (ที่อยู่)
-        province: province, //(จังหวัด)
-        amphure:amphure, //(อำเภอ)
-        tambon : tambon,//(ตำบล)
-        zipcode:zipcode, //เลขไปรษณีย์
-        website : website, //(เว็บไซต์)
+      name:name,  //(ชื่อบริษัทของ supplier)
+      typeofbusiness:typeofbusiness,
+      categoryofproducts:categoryofproducts,
+      address:address,  //(ที่อยู่)
+      country:country,
+      telephone:telephone, //(เบอร์โทรศัพท์)
+      email:email, // (อีเมล์)
+      contact:contact, //(ผู้ติดต่อ)
+      website:website, //(เว็บไซต์)
+      remake:remake
       });
       const add = await data.save();
       return res.status(200).send({status: true,message:"คุณได้เพิ่มข้อมูล supplier",data: add});
@@ -27,7 +27,7 @@ module.exports.add = async (req, res) => {
 //ดึงข้อมูลทั้งหมด
 module.exports.getall = async (req, res) => {
   try {
-    const supplierdata = await Supplier.find();
+    const supplierdata = await Supplier.find().populate({ path: "typeofbusiness"}).populate({ path: "categoryofproducts"});
     if (!supplierdata) {
       return res.status(404).send({ status: false, message: "ไม่มีข้อมูล Supplier" });
     }
@@ -58,19 +58,19 @@ module.exports.edit = async (req, res) => {
     if (!supplierdata) {
         return res.status(404).send({ status: false, message: "ไม่มีข้อมูล Supplier" });
     }
-    const {name,email,contact,telephone,address,province,amphure,tambon,zipcode,website} = req.body
+    const {name,typeofbusiness,categoryofproducts,email,contact,telephone,address,country,remake,website} = req.body
     
     const data = {
-        name:name, //(ชื่อบริษัทของ supplier)
-        email:email, //(อีเมล์)
-        contact:contact,//(ผู้ติดต่อ)
-        telephone:telephone ,//(เบอร์โทรศัพท์)
-        address:address, // (ที่อยู่)
-        province: province, //(จังหวัด)
-        amphure:amphure, //(อำเภอ)
-        tambon : tambon,//(ตำบล)
-        zipcode:zipcode, //เลขไปรษณีย์
-        website : website, //(เว็บไซต์)
+      name:name,  //(ชื่อบริษัทของ supplier)
+      typeofbusiness:typeofbusiness,
+      categoryofproducts:categoryofproducts,
+      address:address,  //(ที่อยู่)
+      country:country,
+      telephone:telephone, //(เบอร์โทรศัพท์)
+      email:email, // (อีเมล์)
+      contact:contact, //(ผู้ติดต่อ)
+      website:website, //(เว็บไซต์)
+      remake:remake
     }
     const edit = await Supplier.findByIdAndUpdate(id,data,{new:true})
     return res.status(200).send({status: true,message: "คุณได้แก้ไขข้อมูล supplier เรียบร้อย",data: edit});

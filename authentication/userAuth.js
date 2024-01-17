@@ -37,7 +37,7 @@ const sales = async (req,res,next) =>{
 
         // ทำการยืนยันสิทธิ์ token
         const decoded =  jwt.verify(token,secretKey)
-        if(decoded.position ==="แผนกขาย"){
+        if(decoded.position ==="Sales Department"){
             req.users = decoded.data
             next();
         }else{

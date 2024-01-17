@@ -4,7 +4,7 @@ const producttype = require("../../controllers/product/producttype.controller")
 const auth = require("../../authentication/userAuth")
 
 //เพิ่มประเภทสินค้า
-router.post('/',auth.sales,producttype.add)
+router.post('/',auth.all,producttype.add)
 
 //ดึงข้อมูลทั้งหมด
 router.get('/',auth.all,producttype.getall)
@@ -13,9 +13,9 @@ router.get('/',auth.all,producttype.getall)
 router.get('/byid/:id',auth.all,producttype.getbyid)
 
 //แก้ไขข้อมูลประเภทสินค้า
-router.put('/:id',auth.sales,producttype.edit)
+router.put('/:id',auth.all,producttype.edit)
 
 //ลบข้อมูลประเภทสินค้า
-router.delete('/:id',auth.sales,producttype.delete)
+router.delete('/:id',auth.all,producttype.delete)
 
 module.exports = router;

@@ -4,19 +4,25 @@ const mongoose = require("mongoose");
 const comparepriceSchema = new mongoose.Schema(
   { 
     customer_id:{type: mongoose.Schema.Types.ObjectId,ref:'customer',required:true} ,//(ชื่อลูกค้า)
-    user_id:{type: mongoose.Schema.Types.ObjectId,ref:'user',required:true},//(รหัสแผนกขาย)
+    user_id:{type: mongoose.Schema.Types.ObjectId,ref:'user',required:true},//(รหัสSales Department )
     refno:{type:String,default:""}, //(เลขที่เอกสาร)
     date :{type:Date,default:Date.now()}, //(วันที่ลงเอกสาร)
     productdetail:{type:[{
-        product_id: {type: mongoose.Schema.Types.ObjectId,ref:'product'},
-        name:{type:String},
-        brand: {type: mongoose.Schema.Types.ObjectId,ref:'brand'},
-        image:{type:String},
-        producttype:{type:mongoose.Schema.Types.ObjectId,ref:'producttype'},
-        supplier:{type:[{
+        type_id: {type: mongoose.Schema.Types.ObjectId,ref:'type'},
+        type_name:{type:String},
+        product:{type:[
+          {
+            product_id: {type: mongoose.Schema.Types.ObjectId,ref:'product'},
+            product_name:{type:String},
+            price:{type:Number},
+            rate:{type: mongoose.Schema.Types.ObjectId,ref:'rate'},
+            rate_name: {type:String,default:""},
+            rate_rateprice: {type:Number,default:0},
+            rate_symbol: {type:String,default:""},
             supplier_id:{type: mongoose.Schema.Types.ObjectId,ref:'supplier'},
-            price :{type:Number}
-        }]}
+            supplier_name:{type:String}
+          }
+        ]}
     }],default:""}    
   },
   {timestamps: true}

@@ -11,7 +11,8 @@ router.get('/',auth.all,product.getall)
 
 //ดึงข้อมูล by id
 router.get('/byid/:id',auth.all,product.getbyid)
-
+//ดึงข้อมูล by supplier
+router.get('/bysupplier/:id',auth.all,product.getbysupplier)
 //แก้ไขข้อมูลสินค้า
 router.put('/:id',auth.sales,product.edit)
 

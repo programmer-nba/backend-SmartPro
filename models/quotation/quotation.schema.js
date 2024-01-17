@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const quotationSchema = new mongoose.Schema(
   { 
     customer_id:{type: mongoose.Schema.Types.ObjectId,ref:'customer',required:true} ,//(ชื่อลูกค้า)
-    user_id:{type: mongoose.Schema.Types.ObjectId,ref:'user',required:true},//(รหัสแผนกขาย)
+    user_id:{type: mongoose.Schema.Types.ObjectId,ref:'user',required:true},//(รหัสSales Department )
     refno:{type:String,default:""}, //(เลขที่เอกสาร)
     date :{type:Date,default:Date.now()}, //(วันที่ลงเอกสาร)
     status:{type:Boolean,default:false},

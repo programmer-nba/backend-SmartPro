@@ -51,6 +51,8 @@ app.use(prefix+'/quotation',require("./routes/quotation/quotation"))
 
 // Rate เรท
 app.use(prefix+'/rate',require("./routes/Rate/Rate"))
+//ประเภทธุรกิจ
+app.use(prefix+'/typeofbusiness',require("./routes/supplier/typeofbusiness"))
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); // หรือกำหนด origin ที่เฉพาะเจาะจง
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');

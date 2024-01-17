@@ -40,10 +40,7 @@ module.exports.getall = async (req, res) => {
     const comparepricedata = await Compareprice.find()
     .populate('customer_id')
     .populate('user_id')
-    .populate('productdetail.product_id')
-    .populate('productdetail.brand')
-    .populate('productdetail.producttype')
-    .populate('productdetail.supplier.supplier_id');
+    .populate('productdetail.product.rate')
     if (!comparepricedata) {
       return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเปรียบเทียบราคา" });
     }
@@ -59,7 +56,7 @@ module.exports.getcustomer = async (req, res) => {
     const comparepricedata = await Compareprice.find({customer_id:id})
     .populate('customer_id')
     .populate('user_id')
-    .populate('productdetail.supplier.supplier_id');
+    .populate('productdetail.product.rate')
     if (!comparepricedata) {
       return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเปรียบเทียบราคา" });
     }
@@ -72,11 +69,9 @@ module.exports.getcustomer = async (req, res) => {
 module.exports.getbyid = async (req, res) => {
   try {
     const comparepricedata = await Compareprice.findOne({ _id: req.params.id }).populate('customer_id')
+    .populate('customer_id')
     .populate('user_id')
-    .populate('productdetail.product_id')
-    .populate('productdetail.brand')
-    .populate('productdetail.producttype')
-    .populate('productdetail.supplier.supplier_id');
+    .populate('productdetail.product.rate')
     if (!comparepricedata) {
       return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเปรียบเทียบราคา" });
     }

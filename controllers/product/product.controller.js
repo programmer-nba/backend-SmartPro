@@ -36,26 +36,24 @@ module.exports.add = async (req, res) => {
         }
         image = reqFiles[0];
       }
-      let { name, brand, producttype,otherbrand,otherproducttype} = req.body;
-      if(brand =="อื่นๆ"){
-        const databrand = new Brand({
-          name:otherbrand
-        })
-        const savebrand = await databrand.save();
-        brand = savebrand._id
-      }
-      if(producttype == "อื่นๆ"){
-        const  dataproducttype = new Producttype({
-          name:otherproducttype
-        })
-        const saveproducttype =  await dataproducttype.save();
-        producttype = saveproducttype._id
-      }
+      let { name, brand,supplier_id,price,detail,originproducts,model,order_code,rate,delivery,dateoffer,quotationnumber,payment,remark,producttype} = req.body;
       const data = new Product({
-        name: name, //(ชื่อสินค้า) 
-        brand: brand, //(แบรนด์)
-        image: image, //(รูปภาพ)
-        producttype: producttype, //(ประเภทสินค้า)
+        name:name, // (ชื่อสินค้า)
+        brand:brand, //(แบรนด์)
+        image:image, //(รูปภาพ)
+        originproducts: originproducts , //1
+        model:model, //2
+        detail:detail,
+        order_code:order_code, //3(เลขรหัสออเดอร์ใบเสนอราคาจากซัพพลายเออร์)
+        price: price,  
+        rate :rate, //4 (รหัสซัพพลาย)(เรทเงิน)
+        delivery:delivery, //5  (เวลาในการจัดส่ง)
+        dateoffer:dateoffer, //6 (วันที่เสนอไป)
+        quotationnumber :quotationnumber, //7(เลขใบที่ซัพพลายเออร์ไปให้)
+        payment :payment,//8(การจ่ายเงิน)
+        remark:remark, //(หมายเหตุ)
+        supplier_id:supplier_id, // (รหัสซัพพลาย)
+        producttype:producttype
       });
       const add = await data.save();
       return res
@@ -71,9 +69,9 @@ module.exports.add = async (req, res) => {
 module.exports.getall = async (req, res) => {
   try {
     const productdata = await Product.find()
-      .populate({ path: "brand", select: "name" })
+      .populate({ path: "rate"})
       .populate({ path: "producttype", select: "name" })
-      .populate({ path: "supplier.supplier_id", select: "name" });
+      .populate({ path: "supplier_id", select: { "name": 1, "categoryofproducts": 1 } });
     if (!productdata) {
       return res
         .status(404)
@@ -90,9 +88,28 @@ module.exports.getbyid = async (req, res) => {
   try {
     const id = req.params.id;
     const productdata = await Product.findOne({ _id: id })
-      .populate({ path: "brand", select: "name" })
-      .populate({ path: "producttype", select: "name" })
-      .populate({ path: "supplier.supplier_id", select: "name" });
+    .populate({ path: "rate"})
+    .populate({ path: "producttype", select: "name" })
+      .populate({ path: "supplier_id", select: { "name": 1, "categoryofproducts": 1 } });
+    if (!productdata) {
+      return res
+        .status(404)
+        .send({ status: false, message: "ไม่มีข้อมูลสินค้า" });
+    }
+    return res.status(200).send({ status: true, data: productdata });
+  } catch (error) {
+    return res.status(500).send({ status: false, error: error.message });
+  }
+};
+
+//ดึงข้อมูลตาม supplier
+module.exports.getbysupplier = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const productdata = await Product.find({supplier_id: id })
+    .populate({ path: "rate"})
+    .populate({ path: "producttype", select: "name" })
+    .populate({ path: "supplier_id", select: { "name": 1, "categoryofproducts": 1 } });
     if (!productdata) {
       return res
         .status(404)
@@ -143,15 +160,26 @@ module.exports.edit = async (req, res) => {
       {
           await deleteFile(productdata.image)
       }
-   
-    const { name, brand, producttype} = req.body;
-
-    const data = {
-      name: name, //(ชื่อสินค้า)
-      brand: brand, //(แบรนด์)
-      image: image, //(รูปภาพ)
-      producttype: producttype, //(ประเภทสินค้า)
-    };
+      console.log(req.body)
+      let { name, brand,supplier_id,price,detail,originproducts,model,order_code,rate,delivery,dateoffer,quotationnumber,payment,remark,producttype} = req.body;
+      const data = {
+        name:name, // (ชื่อสินค้า)
+        brand:brand, //(แบรนด์)
+        image:image, //(รูปภาพ)
+        originproducts: originproducts , //1
+        model:model, //2
+        detail:detail,
+        order_code:order_code, //3(เลขรหัสออเดอร์ใบเสนอราคาจากซัพพลายเออร์)
+        price: price,  
+        rate :rate, //4 (รหัสซัพพลาย)(เรทเงิน)
+        delivery:delivery, //5  (เวลาในการจัดส่ง)
+        dateoffer:dateoffer, //6 (วันที่เสนอไป)
+        quotationnumber :quotationnumber, //7(เลขใบที่ซัพพลายเออร์ไปให้)
+        payment :payment,//8(การจ่ายเงิน)
+        remark:remark, //(หมายเหตุ)
+        supplier_id:supplier_id, // (รหัสซัพพลาย)
+        producttype:producttype
+      }
     const edit = await Product.findByIdAndUpdate(id, data, { new: true });
     return res
       .status(200)
