@@ -53,6 +53,19 @@ app.use(prefix+'/quotation',require("./routes/quotation/quotation"))
 app.use(prefix+'/rate',require("./routes/Rate/Rate"))
 //ประเภทธุรกิจ
 app.use(prefix+'/typeofbusiness',require("./routes/supplier/typeofbusiness"))
+
+//ภาษีนำเข้า
+app.use(prefix+'/importtax',require("./routes/information/importtax"))
+
+//ค่าขนส่ง
+app.use(prefix+'/shipping',require("./routes/information/shipping"))
+// กำไร
+app.use(prefix+'/profit',require("./routes/information/profit"))
+
+
+
+
+
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); // หรือกำหนด origin ที่เฉพาะเจาะจง
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');

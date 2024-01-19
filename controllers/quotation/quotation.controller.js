@@ -3,7 +3,7 @@ const Quotation = require("../../models/quotation/quotation.schema")
 //เพิ่มใบเสนอราคา
 module.exports.add = async (req, res) => {
   try {
-    const {customer_id,user_id,productdetail,total,tax,alltotal} = req.body
+    const {customer_id,user_id,productdetail,total,tax,alltotal,rate,ratename,rateprice,ratesymbol,profitpercent,profit} = req.body
     const startDate = new Date();
     // สร้างวันที่ของวันถัดไป
     const endDate = new Date();
@@ -33,6 +33,12 @@ module.exports.add = async (req, res) => {
         }],
         productdetail:productdetail,
         total:total, //(ราคารวมสินค้า)
+        rate:rate,
+        ratename:ratename,
+        rateprice:rateprice,
+        ratesymbol:ratesymbol,
+        profitpercent:profitpercent, // ค่าเปอร์เซ็นต์ดำเนินการ
+        profit:profit, // ค่าดำเนินการ
         tax: tax, //(หักภาษี 7 %)
         alltotal: alltotal //(ราคารวมทั้งหมด)
       });
@@ -95,11 +101,16 @@ module.exports.edit = async (req, res) => {
     if (!quotationdata) {
         return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
     }
-    const {productdetail,total,tax,alltotal} = req.body
-    
+    const {productdetail,total,tax,alltotal,rate,ratename,rateprice,ratesymbol,profitpercent,profit} = req.body
     const data = {
         productdetail:productdetail,
         total:total, //(ราคารวมสินค้า)
+        rate:rate,
+        ratename:ratename,
+        rateprice:rateprice,
+        ratesymbol:ratesymbol,
+        profitpercent:profitpercent, // ค่าเปอร์เซ็นต์ดำเนินการ
+        profit:profit, // ค่าดำเนินการ
         tax: tax, //(หักภาษี 7 %)
         alltotal: alltotal //(ราคารวมทั้งหมด)
     }

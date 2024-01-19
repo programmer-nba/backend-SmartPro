@@ -23,7 +23,11 @@ const comparepriceSchema = new mongoose.Schema(
             supplier_name:{type:String}
           }
         ]}
-    }],default:""}    
+    }],default:""},
+    rate:{type: mongoose.Schema.Types.ObjectId,ref:'rate',default:null},
+    ratename:{type:String,default:""},
+    rateprice:{type:Number,default:0},
+    ratesymbol: {type:String,default:""},    
   },
   {timestamps: true}
 );

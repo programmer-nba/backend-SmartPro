@@ -14,16 +14,31 @@ const quotationSchema = new mongoose.Schema(
     }],default:null},
     productdetail:{type:[{
         product_id :{type: mongoose.Schema.Types.ObjectId,ref:'product'}, //(ข้อมูลสินค้า)
-	    name:{type:String}, // (ชื่อสินค้า)
+        product_name:{type:String}, // (ชื่อสินค้า)
         brand: {type: mongoose.Schema.Types.ObjectId,ref:'brand'},
         image:{type:String},
-        producttype:{type:mongoose.Schema.Types.ObjectId,ref:'producttype'},
         quantity:{type:Number},//(จำนวน)
-        supplier_id:{type: mongoose.Schema.Types.ObjectId,ref:'supplier'},
         price :{type:Number},
-	    total:{type:Number} //(ราคารวมในสินค้า)
-    }],default:null},    
+        rate: {type:mongoose.Schema.Types.ObjectId,ref:'rate'},
+        rate_name: {type:String},
+        rate_rateprice: {type:Number},
+        rate_symbol: {type:String},
+        supplier_id:{type: mongoose.Schema.Types.ObjectId,ref:'supplier'},
+	      total:{type:Number} //(ราคารวมในสินค้า)
+    }],default:null},
+    
+    ////
+    rate:{type: mongoose.Schema.Types.ObjectId,ref:'rate',default:null},
+    ratename:{type:String,default:""},
+    rateprice:{type:Number,default:0},
+    ratesymbol: {type:String,default:""},
+    ////
+
     total:{type:Number,default:0}, //(ราคารวมสินค้า)
+    ///
+    profitpercent:{type:Number,default:0}, // ค่าเปอร์เซ็นต์ดำเนินการ
+    profit:{type:Number,default:0}, // ค่าดำเนินการ
+    //
     tax:{type:Number,default:0}, //(หักภาษี 7 %)
     alltotal:{type:Number,default:0} //(ราคารวมทั้งหมด)
   },

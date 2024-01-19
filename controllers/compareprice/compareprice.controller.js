@@ -3,7 +3,7 @@ const Compareprice = require("../../models/compareprice/compareprice.schema")
 //เพิ่มใบเปรียบเทียบราคา
 module.exports.add = async (req, res) => {
   try {
-    const {customer_id,user_id,productdetail} = req.body
+    const {customer_id,user_id,productdetail,rate,ratename,rateprice,ratesymbol} = req.body
     // gen อ้างอิง
     const startDate = new Date();
     // สร้างวันที่ของวันถัดไป
@@ -18,6 +18,8 @@ module.exports.add = async (req, res) => {
           $lt: endDate
         }
       });
+
+     
     const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const referenceNumber = String(comparepricedata.length).padStart(5, '0')
     const refno = `${currentDate}${referenceNumber}`
@@ -25,7 +27,11 @@ module.exports.add = async (req, res) => {
         customer_id:customer_id,
         user_id:user_id,
         refno:refno,
-        productdetail:productdetail
+        productdetail:productdetail,
+        rate:rate,
+        ratename:ratename,
+        rateprice:rateprice,
+        ratesymbol: ratesymbol, 
       });
       const add = await data.save();
       return res.status(200).send({status: true,message:"คุณได้เพิ่มข้อมูลใบเปรียบเทียบราคา",data: add});
@@ -40,7 +46,6 @@ module.exports.getall = async (req, res) => {
     const comparepricedata = await Compareprice.find()
     .populate('customer_id')
     .populate('user_id')
-    .populate('productdetail.product.rate')
     if (!comparepricedata) {
       return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเปรียบเทียบราคา" });
     }
@@ -56,7 +61,6 @@ module.exports.getcustomer = async (req, res) => {
     const comparepricedata = await Compareprice.find({customer_id:id})
     .populate('customer_id')
     .populate('user_id')
-    .populate('productdetail.product.rate')
     if (!comparepricedata) {
       return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเปรียบเทียบราคา" });
     }
@@ -71,7 +75,6 @@ module.exports.getbyid = async (req, res) => {
     const comparepricedata = await Compareprice.findOne({ _id: req.params.id }).populate('customer_id')
     .populate('customer_id')
     .populate('user_id')
-    .populate('productdetail.product.rate')
     if (!comparepricedata) {
       return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเปรียบเทียบราคา" });
     }
@@ -89,9 +92,13 @@ module.exports.edit = async (req, res) => {
     if (!comparepricedata) {
         return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเปรียบเทียบราคา" });
     }
-    const {productdetail} = req.body
+    const {productdetail,rate,ratename,rateprice,ratesymbol} = req.body
     const data = {
       productdetail:productdetail, //(ชื่อ)
+      rate:rate,
+      ratename:ratename,
+      rateprice:rateprice,
+      ratesymbol: ratesymbol, 
     }
     const edit = await Compareprice.findByIdAndUpdate(id,data,{new:true})
     return res.status(200).send({status: true,message: "คุณได้แก้ไขข้อมูลใบเปรียบเทียบราคาเรียบร้อย",data: edit});
