@@ -24,4 +24,14 @@ router.delete('/:id',auth.sales,quotation.delete)
 //admin อนุมัติ
 router.put("/admin/accept/:id",auth.verifyTokenadmin,quotation.accept)
 
+//ดึงข้อมูลเฉพาะ ที่ admin อนุมัติให้ออกใบแล้ว
+router.get("/getaccept/",auth.all,quotation.getaccept)
+
+//เดลงานผ่าน
+router.put("/deal/accept/:id",auth.sales,quotation.acceptdeal)
+//เดลงานไม่ผ่าน
+router.put("/deal/unaccept/:id",auth.sales,quotation.unacceptdeal)
+
+//ดึงข้อมูลที่ดีลงานผ่าน 
+router.get("/po/",auth.all,quotation.getquotationtopo)
 module.exports = router;

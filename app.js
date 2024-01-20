@@ -61,7 +61,8 @@ app.use(prefix+'/importtax',require("./routes/information/importtax"))
 app.use(prefix+'/shipping',require("./routes/information/shipping"))
 // กำไร
 app.use(prefix+'/profit',require("./routes/information/profit"))
-
+// ใบสั่งซื้อ
+app.use(prefix+'/purchaseorder',require("./routes/purchaseorder/purchaseorder"))
 
 
 

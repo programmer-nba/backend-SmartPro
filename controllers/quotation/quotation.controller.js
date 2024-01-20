@@ -146,9 +146,15 @@ module.exports.accept = async (req, res) => {
         return res.status(200).send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
       }
       quotationdata.statusdetail.push({status:"ออกใบเสนอราคาสำเร็จ",date:Date.now()})
+      
       const data ={
         status:true,
-        statusdetail:quotationdata.statusdetail
+        statusdetail:quotationdata.statusdetail,
+        statusdealdetail:[{
+          status:"อยู่ระหว่างการดีลงานกับลูกค้า",
+          date: Date.now(),
+        }],
+       
       }
      
       const edit = await Quotation.findByIdAndUpdate(id,data,{new:true})
@@ -156,4 +162,80 @@ module.exports.accept = async (req, res) => {
     } catch (error) {
       return res.status(500).send({ status: false, error: error.message });
     }
-  };
+};
+
+//ดึงข้อมูลใบเสนอราคาที่อนุมัติ
+module.exports.getaccept = async (req, res) => {
+  try {
+    const quotationdata = await Quotation.find({status:true})
+    .populate('customer_id')
+    .populate('user_id');
+    if (!quotationdata) {
+      return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
+    }
+    return res.status(200).send({ status: true, data: quotationdata });
+  } catch (error) {
+    return res.status(500).send({ status: false, error: error.message });
+  }
+};
+
+//ผ่านงาน
+module.exports.acceptdeal = async (req, res) => {
+  try {
+    const id = req.params.id
+    const quotationdata = await Quotation.findOne({ _id: id });
+    if (!quotationdata) {
+      return res.status(200).send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
+    }
+    quotationdata.statusdealdetail.push({status:"ดีลงานผ่าน",date:Date.now()})
+    const {remake} = req.body
+    const data ={
+      statusdeal:true,
+      statusdealdetail:quotationdata.statusdealdetail,
+      dealremark:remake,
+    }
+   
+    const edit = await Quotation.findByIdAndUpdate(id,data,{new:true})
+    return res.status(200).send({status: true,message: "ดีลงานผ่านแล้ว",data: edit});
+  } catch (error) {
+    return res.status(500).send({ status: false, error: error.message });
+  }
+};
+
+//ไม่ผ่านงาน
+module.exports.unacceptdeal = async (req, res) => {
+  try {
+    const id = req.params.id
+    const quotationdata = await Quotation.findOne({ _id: id });
+    if (!quotationdata) {
+      return res.status(200).send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
+    }
+    const {remake} = req.body
+    quotationdata.statusdealdetail.push({status:"ดีลงานไม่ผ่าน",date:Date.now()})
+    const data ={
+      statusdeal:false,
+      statusdealdetail:quotationdata.statusdealdetail,
+      dealremark:remake,
+    }
+   
+    const edit = await Quotation.findByIdAndUpdate(id,data,{new:true})
+    return res.status(200).send({status: true,message: "ดีลงานไม่ผ่าน",data: edit});
+  } catch (error) {
+    return res.status(500).send({ status: false, error: error.message });
+  }
+};
+
+//ดึงข้อมูลที่ผ่านการดีลงาน
+module.exports.getquotationtopo = async (req, res) => {
+  try {
+    const quotationdata = await Quotation.find({status:true,statusdeal:true})
+    .populate('customer_id')
+    .populate('user_id');
+    if (!quotationdata) {
+      return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
+    }
+    return res.status(200).send({ status: true, data: quotationdata });
+  } catch (error) {
+    return res.status(500).send({ status: false, error: error.message });
+  }
+};
