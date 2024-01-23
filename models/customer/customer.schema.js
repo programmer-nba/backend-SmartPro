@@ -4,16 +4,17 @@ const mongoose = require("mongoose");
 const customerSchema = new mongoose.Schema(
   {
     name:{type:String,required: true}, //(ชื่อบริษัท หรือ ชื่อลูกค้า)
-    typecustomer:{type:String,required: true}, //(ประเภทลูกค้า เช่น ในประเทศ , นอกประเทศ)
+    typebussinecustomer:{type: mongoose.Schema.Types.ObjectId,ref:'typebusinesscustomer',default:null},
+    typelndustry:{type: mongoose.Schema.Types.ObjectId,ref:'typeindustry',default:null},
+    capitalvalue:{type:Number}, // มูลค่าบริษัท
     address:{type:String,required: true}, //(ที่อยู่) 
-    province:{type:String,required: true}, //(จังหวัด)
-    amphure:{type:String,required: true}, //(อำเภอ)
-    tambon:{type:String,required: true}, //(ตำบล)
-    zipcode:{type:String,required:true}, 
+    country:{type:String,required:true},
+    telephone:{type:String,required: true}, //(เบอร์โทรศัพท์)
     email:{type:String,required: true}, //(อีเมล์)
     contact:{type:String,required: true}, //(ผู้ติดต่อ)
-    telephone:{type:String,required: true}, //(เบอร์โทรศัพท์)
-    taxcustomerid:{type:String} // เลขประจำตัวผู้เสียภาษี
+    website:{type:String,required:true},
+    taxcustomerid:{type:String}, // เลขประจำตัวผู้เสียภาษี
+    remark:{type:String,required:true}
   },
   {timestamps: true}
 );

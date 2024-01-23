@@ -19,4 +19,7 @@ router.put('/:id',auth.sales,product.edit)
 //ลบข้อมูลสินค้า
 router.delete('/:id',auth.sales,product.delete)
 
+router.put("/image/:id",auth.sales,product.addimage)
+router.put("/spec/:id",auth.sales,product.addspec)
+
 module.exports = router;

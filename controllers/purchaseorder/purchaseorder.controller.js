@@ -3,7 +3,7 @@ const Purchaseorder = require("../../models/purchaseorder/purchaseorder.schema")
 //เพิ่มใบสั่งซื้อสินค้าเรียบร้อยแล้ว
 module.exports.add = async (req, res) => {
   try {
-    const {supplier_id,sale_id,procurement_id,quotation_id,productdetail,rate,ratename,rateprice,ratesymbol,total,profitpercent,profit,tax,alltotal} = req.body
+    const {supplier_id,sale_id,procurement_id,quotation_id,productdetail,rate,ratename,rateprice,ratesymbol,total,tax,alltotal} = req.body
     const startDate = new Date();
     // สร้างวันที่ของวันถัดไป
     const endDate = new Date();
@@ -34,8 +34,6 @@ module.exports.add = async (req, res) => {
         rateprice:rateprice,
         ratesymbol:ratesymbol,
         total:total, //(ราคารวมสินค้า)
-        profitpercent:profitpercent, // ค่าเปอร์เซ็นต์ดำเนินการ
-        profit:profit, // ค่าดำเนินการ
         tax:tax, //(หักภาษี 7 %)
         alltotal:alltotal, //(ราคารวมทั้งหมด)
       });
@@ -82,8 +80,8 @@ module.exports.getbyid = async (req, res) => {
   try {
     const purchaseorderdata = await Purchaseorder.findOne({_id: req.params.id })
     .populate('supplier_id')
-        .populate('sale_id')
-        .populate('procurement_id');
+    .populate('sale_id')
+    .populate('procurement_id');
     if (!purchaseorderdata) {
       return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบสั่งซื้อนี้" });
     }
@@ -101,7 +99,7 @@ module.exports.edit = async (req, res) => {
     if (!purchaseorderdata) {
         return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบสั่งซื้อนี้" });
     }
-    const {productdetail,total,tax,alltotal,rate,ratename,rateprice,ratesymbol,profitpercent,profit} = req.body
+    const {productdetail,total,tax,alltotal,rate,ratename,rateprice,ratesymbol} = req.body
     const data = {
         productdetail:productdetail,
         rate:rate,
@@ -109,8 +107,6 @@ module.exports.edit = async (req, res) => {
         rateprice:rateprice,
         ratesymbol:ratesymbol,
         total:total, //(ราคารวมสินค้า)
-        profitpercent:profitpercent, // ค่าเปอร์เซ็นต์ดำเนินการ
-        profit:profit, // ค่าดำเนินการ
         tax:tax, //(หักภาษี 7 %)
         alltotal:alltotal, //(ราคารวมทั้งหมด)
     }

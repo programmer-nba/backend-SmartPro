@@ -3,8 +3,8 @@ const router = express.Router();
 const purchaseorder = require("../../controllers/purchaseorder/purchaseorder.controller")
 const auth = require("../../authentication/userAuth")
 
-//เพิ่มใบเปรียบเทียบราคา
-router.post('/',auth.sales,purchaseorder.add)
+//เพิ่มใบสั่งซื้อสินค้า
+router.post('/',auth.procurement,purchaseorder.add)
 
 //ดึงข้อมูลทั้งหมด
 router.get('/',auth.all,purchaseorder.getall)
@@ -15,10 +15,11 @@ router.get("/byquotation/:id",auth.all,purchaseorder.getquotation)
 //ดึงข้อมูล by id
 router.get('/byid/:id',auth.all,purchaseorder.getbyid)
 
-//แก้ไขข้อมูลใบเปรียบเทียบราคา
-router.put('/:id',auth.sales,purchaseorder.edit)
+//แก้ไขข้อมูลใบสั่งซื้อสินค้า
+router.put('/:id',auth.procurement,purchaseorder.edit)
 
-//ลบข้อมูลใบเปรียบเทียบราคา
-router.delete('/:id',auth.sales,purchaseorder.delete)
+//ลบข้อมูลใบสั่งซื้อสินค้า
+router.delete('/:id',auth.procurement,purchaseorder.delete)
+
 
 module.exports = router;

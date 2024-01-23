@@ -47,8 +47,8 @@ const quotationSchema = new mongoose.Schema(
       status:{type:String},
       date:{type:Date,default:Date.now()},
     }],default:null},
-    dealremark:{type:String,default:""}
-
+    dealremark:{type:String,default:""},
+    file:{type:String,default:""}
   },
   {timestamps: true}
 );

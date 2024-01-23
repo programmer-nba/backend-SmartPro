@@ -1,4 +1,19 @@
 const Quotation = require("../../models/quotation/quotation.schema") 
+const Order = require("../../models/order/order.schema")
+
+const multer = require("multer");
+const {
+  uploadFileCreate,
+  deleteFile,
+} = require("../../functions/uploadfilecreate");
+
+const storage = multer.diskStorage({
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname);
+    //console.log(file.originalname);
+  },
+});
+
 
 //เพิ่มใบเสนอราคา
 module.exports.add = async (req, res) => {
@@ -182,6 +197,27 @@ module.exports.getaccept = async (req, res) => {
 //ผ่านงาน
 module.exports.acceptdeal = async (req, res) => {
   try {
+
+    let upload = multer({ storage: storage }).array("filedata", 20);
+    upload(req, res, async function (err) {
+      const reqFiles = [];
+      const result = [];
+      if (err) {
+        return res.status(500).send(err);
+      }
+      let file = '' // ตั้งตัวแปรรูป
+      //ถ้ามีรูปให้ทำฟังก์ชั่นนี้ก่อน
+      if (req.files) {
+        const url = req.protocol + "://" + req.get("host");
+        for (var i = 0; i < req.files.length; i++) {
+          const src = await uploadFileCreate(req.files, res, { i, reqFiles });
+          result.push(src);
+        
+          //   reqFiles.push(url + "/public/" + req.files[i].filename);
+        }
+        file = reqFiles[0]
+      }
+
     const id = req.params.id
     const quotationdata = await Quotation.findOne({ _id: id });
     if (!quotationdata) {
@@ -193,10 +229,52 @@ module.exports.acceptdeal = async (req, res) => {
       statusdeal:true,
       statusdealdetail:quotationdata.statusdealdetail,
       dealremark:remake,
+      file:file
     }
-   
     const edit = await Quotation.findByIdAndUpdate(id,data,{new:true})
-    return res.status(200).send({status: true,message: "ดีลงานผ่านแล้ว",data: edit});
+    ///
+    const startDate = new Date();
+    // สร้างวันที่ของวันถัดไป
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + 1);
+    // ปรับเวลาให้เป็นเริ่มต้นของวัน
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(0, 0, 0, 0);
+    const orderprice = await Order.find({
+        createdAt: {
+          $gte: startDate,
+          $lt: endDate
+        }
+      });
+    const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const referenceNumber = String(orderprice.length).padStart(5, '0')
+    const refno = `ORDER${currentDate}${referenceNumber}`
+
+    const dataorder = new Order({
+      refno:refno, //(เลขที่เอกสาร)
+      customer_id:quotationdata.customer_id,//(รหัสลูกค้า)
+      sale_id:quotationdata.user_id,//(รหัสSales Department )
+      procurement_id:null, //(รหัส procurement)
+      quotation_id:quotationdata._id, //รหัสใบเสนอราคา
+      date :Date.now(), //(วันที่ลงเอกสาร) 
+      productdetail:quotationdata.productdetail,
+      rate:quotationdata.rate,
+      ratename:quotationdata.ratename,
+      rateprice:quotationdata.rateprice,
+      ratesymbol: quotationdata.ratesymbol,
+      total:quotationdata.total, //(ราคารวมสินค้า)
+      profitpercent:quotationdata.profitpercent, // ค่าเปอร์เซ็นต์ดำเนินการ
+      profit:quotationdata.profit, // ค่าดำเนินการ
+      tax:quotationdata.tax, //(หักภาษี 7 %)
+      alltotal:quotationdata.alltotal, //(ราคารวมทั้งหมด)
+      status:"รอเปิดใบสั่งซื้อ",
+      statusdetail:[{status:"รอเปิดใบสั่งซื้อ",date:Date.now()}],
+      file:file
+    })
+    const addorder = await dataorder.save();
+    return res.status(200).send({status: true,message: "ดีลงานผ่านแล้ว",data: edit,order:addorder});
+    });
+    
   } catch (error) {
     return res.status(500).send({ status: false, error: error.message });
   }
@@ -234,6 +312,7 @@ module.exports.getquotationtopo = async (req, res) => {
     if (!quotationdata) {
       return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
     }
+
     return res.status(200).send({ status: true, data: quotationdata });
   } catch (error) {
     return res.status(500).send({ status: false, error: error.message });

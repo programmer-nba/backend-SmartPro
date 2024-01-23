@@ -63,9 +63,14 @@ app.use(prefix+'/shipping',require("./routes/information/shipping"))
 app.use(prefix+'/profit',require("./routes/information/profit"))
 // ใบสั่งซื้อ
 app.use(prefix+'/purchaseorder',require("./routes/purchaseorder/purchaseorder"))
-
-
-
+// ออเดอร์
+app.use(prefix+"/order",require("./routes/order/order"))
+//ใบเสนอราคาของ supplier 
+app.use(prefix+'/quotationsupplier',require("./routes/quotationsupplier/quotationsupplier"))
+//ประเภทธุรกิจของลูกค้า
+app.use(prefix+'/typebusinesscustomer',require("./routes/customer/typebusinesscustomer"))
+//ประเภทอุสาหกรรม
+app.use(prefix+'/typelndustry',require("./routes/customer/typeIndustry"))
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); // หรือกำหนด origin ที่เฉพาะเจาะจง
