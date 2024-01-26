@@ -34,7 +34,7 @@ module.exports.login = async (req, res) => {
                     position:login.position
                 }
                 const secretKey = process.env.SECRET_KEY
-                const token = jwt.sign(payload,secretKey,{expiresIn:"8h"})
+                const token = jwt.sign(payload,secretKey,{expiresIn:"10D"})
                 return res.status(200).send({ status: true, data: payload, token: token})
 
             }else{

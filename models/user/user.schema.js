@@ -10,7 +10,8 @@ const userSchema = new mongoose.Schema(
     nickname:{type:String,require:true}, // ชื่อเล่น
     position:{type:String,require:true}, // ตำแหน่ง
     telephone:{type:String},
-    image:{type:String,default:null} // รูปภาพ
+    image:{type:String,default:null}, // รูปภาพ
+    email:{type:String,default:""},
   },
   {timestamps: true}
 );

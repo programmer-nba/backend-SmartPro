@@ -18,13 +18,19 @@ const quotationSchema = new mongoose.Schema(
         brand: {type: mongoose.Schema.Types.ObjectId,ref:'brand'},
         image:{type:String},
         quantity:{type:Number},//(จำนวน)
-        price :{type:Number},
+        unit:{type:String}, // หน่วย
         rate: {type:mongoose.Schema.Types.ObjectId,ref:'rate'},
         rate_name: {type:String},
         rate_rateprice: {type:Number},
         rate_symbol: {type:String},
         supplier_id:{type: mongoose.Schema.Types.ObjectId,ref:'supplier'},
+        price :{type:Number}, // ราคาต้นทุน
+        priceprofit:{type:Number}, // ราคา +กำไรแล้ว
+        discount:{type:Number}, //เพิ่มเข้ามาใหม่
+        numdiscount:{type:Number},
 	      total:{type:Number} //(ราคารวมในสินค้า)
+
+
     }],default:null},
     
     ////
@@ -37,7 +43,7 @@ const quotationSchema = new mongoose.Schema(
     total:{type:Number,default:0}, //(ราคารวมสินค้า)
     ///
     profitpercent:{type:Number,default:0}, // ค่าเปอร์เซ็นต์ดำเนินการ
-    profit:{type:Number,default:0}, // ค่าดำเนินการ
+    profit:{type:Number,default:0}, // กำไร
     //
     tax:{type:Number,default:0}, //(หักภาษี 7 %)
     alltotal:{type:Number,default:0}, //(ราคารวมทั้งหมด)
@@ -48,7 +54,20 @@ const quotationSchema = new mongoose.Schema(
       date:{type:Date,default:Date.now()},
     }],default:null},
     dealremark:{type:String,default:""},
-    file:{type:String,default:""}
+    file:{type:String,default:""},
+
+    //ส่วนเพิ่มใหม่
+    project: {type:String,default:""},
+    discount:{type:Number}, //เพิ่มเข้ามาใหม่
+    totalprofit:{type:Number,default:0}, //กำไรที่ - กับส่วนลดแล้ว
+    warranty:{type:String,default:""}, //ประกัน
+    timeofdelivery: {type:String,default:""} ,//กำหนดส่งของ
+    paymentterm :{type:String,default:""}, //เงื่อนไขการชำระเงิน
+    remark:{type:String,default:""},
+    priceprofit:{type:String,default:0},
+    
+
+
   },
   {timestamps: true}
 );

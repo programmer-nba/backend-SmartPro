@@ -14,7 +14,8 @@ const productSchema = new mongoose.Schema(
     detail:{type:String,default:""},
     quotationsupplier_id:{type: mongoose.Schema.Types.ObjectId,ref:'quotationsupplier'},
     supplier_id:{type: mongoose.Schema.Types.ObjectId,ref:'supplier'}, // (รหัสซัพพลาย)
-    producttype:{type: mongoose.Schema.Types.ObjectId,ref:'producttype'}
+    producttype:{type: mongoose.Schema.Types.ObjectId,ref:'producttype'},
+    unit:{type:String,required:true}
   },
   {timestamps: true}
 );

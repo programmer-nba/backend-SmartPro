@@ -36,7 +36,7 @@ module.exports.add = async (req, res) => {
         }
         image = reqFiles[0];
       }
-      let {name,brand,model,price,rate,quotationsupplier_id,supplier_id,producttype,detail} = req.body;
+      let {name,brand,model,price,rate,quotationsupplier_id,supplier_id,producttype,detail,unit} = req.body;
       const data = new Product({
         name:name, // (ชื่อสินค้า)
         brand:brand, //(แบรนด์)
@@ -48,7 +48,8 @@ module.exports.add = async (req, res) => {
         detail:detail,
         quotationsupplier_id:quotationsupplier_id,
         supplier_id:supplier_id, // (รหัสซัพพลาย)
-        producttype:producttype
+        producttype:producttype,
+        unit:unit
       });
       const add = await data.save();
       return res
@@ -154,7 +155,7 @@ module.exports.edit = async (req, res) => {
       }
     
       console.log(req.body)
-      let {name,brand,model,price,rate,quotationsupplier_id,supplier_id,producttype,detail} = req.body;
+      let {name,brand,model,price,rate,quotationsupplier_id,supplier_id,producttype,detail,unit} = req.body;
       const data = {
         name:name, // (ชื่อสินค้า)
         brand:brand, //(แบรนด์)
@@ -164,7 +165,8 @@ module.exports.edit = async (req, res) => {
         quotationsupplier_id:quotationsupplier_id,
         supplier_id:supplier_id, // (รหัสซัพพลาย)
         producttype:producttype,
-        detail:detail
+        detail:detail,
+        unit:unit
       }
     const edit = await Product.findByIdAndUpdate(id, data, { new: true });
     return res

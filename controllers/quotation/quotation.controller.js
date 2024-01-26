@@ -18,7 +18,8 @@ const storage = multer.diskStorage({
 //เพิ่มใบเสนอราคา
 module.exports.add = async (req, res) => {
   try {
-    const {customer_id,user_id,productdetail,total,tax,alltotal,rate,ratename,rateprice,ratesymbol,profitpercent,profit} = req.body
+    const {customer_id,user_id,productdetail,total,tax,alltotal,rate,ratename,rateprice,ratesymbol,profitpercent,profit
+      ,project,totalprofit,discount,warranty,timeofdelivery,paymentterm,remark,priceprofit} = req.body
     const startDate = new Date();
     // สร้างวันที่ของวันถัดไป
     const endDate = new Date();
@@ -54,8 +55,16 @@ module.exports.add = async (req, res) => {
         ratesymbol:ratesymbol,
         profitpercent:profitpercent, // ค่าเปอร์เซ็นต์ดำเนินการ
         profit:profit, // ค่าดำเนินการ
+        priceprofit:priceprofit,
         tax: tax, //(หักภาษี 7 %)
-        alltotal: alltotal //(ราคารวมทั้งหมด)
+        alltotal: alltotal, //(ราคารวมทั้งหมด)
+        project: project,
+        totalprofit:totalprofit, //เพิ่มมาใหม่ใหม่
+        discount:discount, //เพิ่มเข้ามาใหม่
+        warranty:warranty, //ประกัน
+        timeofdelivery: timeofdelivery ,//กำหนดส่งของ
+        paymentterm :paymentterm, //เงื่อนไขการชำระเงิน
+        remark:remark,
       });
 
       const add = await data.save();
@@ -116,7 +125,8 @@ module.exports.edit = async (req, res) => {
     if (!quotationdata) {
         return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
     }
-    const {productdetail,total,tax,alltotal,rate,ratename,rateprice,ratesymbol,profitpercent,profit} = req.body
+    const {productdetail,total,tax,alltotal,rate,ratename
+      ,rateprice,ratesymbol,profitpercent,profit,project,totalprofit,discount,warranty,timeofdelivery,paymentterm,remark,priceprofit} = req.body
     const data = {
         productdetail:productdetail,
         total:total, //(ราคารวมสินค้า)
@@ -127,8 +137,17 @@ module.exports.edit = async (req, res) => {
         profitpercent:profitpercent, // ค่าเปอร์เซ็นต์ดำเนินการ
         profit:profit, // ค่าดำเนินการ
         tax: tax, //(หักภาษี 7 %)
-        alltotal: alltotal //(ราคารวมทั้งหมด)
+        alltotal: alltotal, //(ราคารวมทั้งหมด)
+        project: project,
+        totalprofit:totalprofit, //เพิ่มมาใหม่ใหม่
+        discount:discount, //เพิ่มเข้ามาใหม่
+        warranty:warranty, //ประกัน
+        timeofdelivery: timeofdelivery ,//กำหนดส่งของ
+        paymentterm :paymentterm, //เงื่อนไขการชำระเงิน
+        remark:remark,
+        priceprofit:priceprofit
     }
+    console.log(priceprofit)
     const edit = await Quotation.findByIdAndUpdate(id,data,{new:true})
     return res.status(200).send({status: true,message: "คุณได้แก้ไขข้อมูลใบเสนอราคาเรียบร้อย",data: edit});
   } catch (error) {
