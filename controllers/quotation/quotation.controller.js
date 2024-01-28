@@ -6,6 +6,7 @@ const {
   uploadFileCreate,
   deleteFile,
 } = require("../../functions/uploadfilecreate");
+const Commission = require("../../models/information/commission.schama");
 
 const storage = multer.diskStorage({
   filename: function (req, file, cb) {
@@ -65,6 +66,7 @@ module.exports.add = async (req, res) => {
         timeofdelivery: timeofdelivery ,//กำหนดส่งของ
         paymentterm :paymentterm, //เงื่อนไขการชำระเงิน
         remark:remark,
+        
       });
 
       const add = await data.save();
@@ -244,11 +246,13 @@ module.exports.acceptdeal = async (req, res) => {
     }
     quotationdata.statusdealdetail.push({status:"ดีลงานผ่าน",date:Date.now()})
     const {remake} = req.body
+    const commissionpercent = await Commission.find();
     const data ={
       statusdeal:true,
       statusdealdetail:quotationdata.statusdealdetail,
       dealremark:remake,
-      file:file
+      file:file,
+      commissionpercent:commissionpercent?.percent
     }
     const edit = await Quotation.findByIdAndUpdate(id,data,{new:true})
     ///

@@ -75,6 +75,9 @@ app.use(prefix+'/typelndustry',require("./routes/customer/typeIndustry"))
 app.use(prefix+'/contactcustomer',require("./routes/customer/contactcustomer"))
 //รีพอร์ท 
 app.use(prefix+'/report',require("./routes/report/report"))
+//ค่าคอมมิสชั่น
+app.use(prefix+'/commission',require("./routes/information/commission"))
+
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); // หรือกำหนด origin ที่เฉพาะเจาะจง
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');

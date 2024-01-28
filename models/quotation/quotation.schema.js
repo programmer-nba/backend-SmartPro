@@ -65,9 +65,8 @@ const quotationSchema = new mongoose.Schema(
     paymentterm :{type:String,default:""}, //เงื่อนไขการชำระเงิน
     remark:{type:String,default:""},
     priceprofit:{type:String,default:0},
-    
-
-
+    //ค่าคอมมิสชั่น
+    commissionpercent:{type:Number,default:0},
   },
   {timestamps: true}
 );
