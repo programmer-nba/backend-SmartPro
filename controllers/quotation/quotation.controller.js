@@ -252,7 +252,7 @@ module.exports.acceptdeal = async (req, res) => {
       statusdealdetail:quotationdata.statusdealdetail,
       dealremark:remake,
       file:file,
-      commissionpercent:commissionpercent?.percent
+      commissionpercent:commissionpercent[0]?.percent
     }
     const edit = await Quotation.findByIdAndUpdate(id,data,{new:true})
     ///
@@ -288,6 +288,8 @@ module.exports.acceptdeal = async (req, res) => {
       total:quotationdata.total, //(ราคารวมสินค้า)
       profitpercent:quotationdata.profitpercent, // ค่าเปอร์เซ็นต์ดำเนินการ
       profit:quotationdata.profit, // ค่าดำเนินการ
+      priceprofit:quotationdata.priceprofit, // ราคา+กำไร
+      discount:quotationdata.discount,
       tax:quotationdata.tax, //(หักภาษี 7 %)
       alltotal:quotationdata.alltotal, //(ราคารวมทั้งหมด)
       status:"รอเปิดใบสั่งซื้อ",

@@ -34,6 +34,8 @@ const orderSchema = new mongoose.Schema(
     total:{type:Number,default:0}, //(ราคารวมสินค้า)
     profitpercent:{type:Number,default:0}, // ค่าเปอร์เซ็นต์ดำเนินการ
     profit:{type:Number,default:0}, // ค่าดำเนินการ
+    priceprofit:{type:Number,default:0}, // ราคา+กำไร
+    discount: {type:Number,default:0},
     tax:{type:Number,default:0}, //(หักภาษี 7 %)
     alltotal:{type:Number,default:0}, //(ราคารวมทั้งหมด)
     status:{type:String,default:"รอเปิดใบสั่งซื้อ"},

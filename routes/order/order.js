@@ -8,13 +8,14 @@ const auth = require("../../authentication/userAuth")
 //ดึงข้อมูลทั้งหมด
 router.get('/',auth.all,Order.getall)
 
-// //ดึงข้อมูล by id
-// router.get('/byid/:id',auth.all,Profit.getbyid)
+//ดึงข้อมูล by id
+router.get('/byid/:id',auth.all,Order.getbyid)
 
-// // แก้ไขกำไร
-// router.put('/:id',auth.verifyTokenadmin,Profit.edit)
+// ลบข้อมูลออเดอร์
+router.delete('/:id',auth.verifyTokenadmin,Order.delete)
 
-// // ลบข้อมูลกำไร
-// router.delete('/:id',auth.verifyTokenadmin,Profit.delete)
+//พนักงาน po เปิดใบสั่งซื้อ
+router.put("/openop/:id",auth.procurement,Order.openop);
+
 
 module.exports = router;

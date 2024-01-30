@@ -1,6 +1,6 @@
 const Quotation = require("../../models/quotation/quotation.schema");
-
-const Producttype = require("../../models/product/producttype.schema")
+const Producttype = require("../../models/product/producttype.schema");
+const User = require("../../models/user/user.schema");
 module.exports.reportquotationprice = async (req, res) => {
   try {
     //รายเดือน
@@ -1282,7 +1282,7 @@ module.exports.dashboardadmin = async (req,res)=>{
          });
    }
      }
-   })
+    })
     /////////////////////////
     //ยอดขาย sale
     const salequotation = [];
@@ -1309,6 +1309,162 @@ module.exports.dashboardadmin = async (req,res)=>{
     ////////////////
      return res.status(200).json({ status: true,header:header,dashboard:dashboard,ReportProfits:ReportProfits,salequotation:salequotation});
   } catch(error){
+    return res.status(500).send({status:false,error:error.message});
+  }
+}
+
+module.exports.dashboardsale = async (req,res)=>{
+  try{
+      const id = req.body.id;
+      const user_id = req.body.user_id;
+      const user = await User.findById(user_id);
+      const quotationdata = await Quotation.find({user_id:user_id});
+      let header = ''
+      let currentdata = ''
+      if(id =="month")
+      {
+        const currentMonth = new Date().getMonth() + 1;
+        const currentYear = new Date().getFullYear();
+        currentdata = quotationdata.filter(items => new Date(items.createdAt).getMonth() + 1 == currentMonth && new Date(items.createdAt).getFullYear() == currentYear);
+        header = convertToThaiMonth(currentMonth)+" "+currentYear;
+      }
+      else if (id === "quarter") {
+      // กรณีเลือก "quarter"
+      const currentQuarter = getQuarter(new Date());
+      currentdata = quotationdata.filter(items => getQuarter(new Date(items.createdAt)) === currentQuarter);
+      header = `ไตรมาสที่ ${currentQuarter}  ปี ${new Date().getFullYear()}`;
+      }
+      else if (id === "year") {
+      // กรณีเลือก "year"
+      const currentYear = new Date().getFullYear();
+      currentdata = quotationdata.filter(items => new Date(items.createdAt).getFullYear() == currentYear);
+      header = `ปี ${currentYear}`;
+      }
+      else if(id =="other"){
+      const date = req.body.date
+      if(date.length ==2){
+        const startDate = new Date(date[0]);
+        const endDate = new Date(date[1]);
+        currentdata = quotationdata.filter((item) => {
+          const itemDate = new Date(item.createdAt);
+          return itemDate >= startDate && itemDate <= endDate;
+        });
+
+        /// ตั้งหัว
+        // Format header based on start and end date
+        const startDay = startDate.getDate();
+        const startMonth = startDate.getMonth() + 1;
+        const startYear = startDate.getFullYear();
+        const endDay = endDate.getDate();
+        const endMonth = endDate.getMonth() + 1;
+        const endYear = endDate.getFullYear();
+        header = `ระหว่าง ${startDay} ${convertToThaiMonth(startMonth)} ${startYear} ถึง ${endDay} ${convertToThaiMonth(endMonth)} ${endYear}`;
+      }else{
+        return res.status(400).json("ส่งวันมาไม่ครบ");
+      }
+      }
+      else{
+      currentdata= quotationdata
+      header= "ทั้งหมด"
+      }
+      const passdata = currentdata.filter((item)=>item?.statusdealdetail[item.statusdealdetail.length - 1]?.status === "ดีลงานผ่าน")
+      const totalSales = passdata.reduce((sum, item) => sum + calculatorrate(item.alltotal, item.rateprice), 0);
+      const totalcommission = passdata.reduce((sum, item) => sum + calculatorrate(item?.alltotal*(item?.commissionpercent/100),item?.rateprice), 0);
+
+      const pricequotation = currentdata.length
+      const passedJobs = currentdata.filter(item => item.statusdealdetail[item.statusdealdetail.length - 1]?.status === "ดีลงานผ่าน").length;
+      const notPassedJobs = currentdata.filter(item => item.statusdealdetail[item.statusdealdetail.length - 1]?.status === "ดีลงานไม่ผ่าน").length;
+      const dashboard ={
+        totalSales:totalSales,
+        totalcommission:totalcommission,
+        pricequotation:pricequotation,
+        passedJobs:passedJobs,
+        notPassedJobs:notPassedJobs
+      }
+      const ReportProfits = [];
+     const dataprofits = quotationdata.filter(items => items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน");
+      dataprofits.forEach((item)=>{
+     if(id == "month"){
+       const createdAt = new Date(item.createdAt);
+       const year = createdAt.getFullYear();
+       const month = createdAt.getMonth() + 1; // เดือนเริ่มที่ 1
+     
+       // ค้นหาข้อมูลรายเดือน
+       const monthlyProfitIndex = ReportProfits.findIndex(
+         (monthly) => monthly.year === year && monthly.month === month
+       );
+     
+       if (monthlyProfitIndex !== -1) {
+         // ถ้ามีข้อมูลรายเดือนแล้ว
+         ReportProfits[monthlyProfitIndex].totalall += calculatorrate(item.alltotal, item.rateprice);
+         ReportProfits[monthlyProfitIndex].totalProfit += calculatorrate(item?.alltotal*(item?.commissionpercent/100),item?.rateprice);
+       
+         ReportProfits[monthlyProfitIndex].jobCount += 1;
+       } else {
+         // ถ้ายังไม่มีข้อมูลรายเดือน
+         ReportProfits.push({
+           year: year,
+           month: month,
+           totalall:calculatorrate(item.alltotal, item.rateprice),
+           totalProfit: calculatorrate(item?.alltotal*(item?.commissionpercent/100),item?.rateprice),
+           jobCount: 1,
+         });
+       }
+     }
+     else if(id =="quarter"){
+       const createdAt = new Date(item.createdAt);
+       const year = createdAt.getFullYear();
+       const quarter = getQuarter(createdAt);
+   
+       // ค้นหาข้อมูลรายไตรมาส
+       const quarterlyProfitIndex = ReportProfits.findIndex(
+         (quarterly) => quarterly.year === year && quarterly.quarter === quarter
+       );
+   
+       if (quarterlyProfitIndex !== -1) {
+         // ถ้ามีข้อมูลรายไตรมาสแล้ว
+         ReportProfits[quarterlyProfitIndex].totalall += calculatorrate(item.alltotal, item.rateprice)
+         ReportProfits[quarterlyProfitIndex].totalProfit += calculatorrate(item?.alltotal*(item?.commissionpercent/100),item?.rateprice);
+         ReportProfits[quarterlyProfitIndex].jobCount += 1;
+       } else {
+         // ถ้ายังไม่มีข้อมูลรายไตรมาส
+         ReportProfits.push({
+           year: year,
+           quarter: quarter,
+           totalall:calculatorrate(item.alltotal, item.rateprice),
+           totalProfit: calculatorrate(item?.alltotal*(item?.commissionpercent/100),item?.rateprice),
+           jobCount: 1,
+         });
+       }
+
+     }else{
+       //รายปี
+       const createdAt = new Date(item.createdAt);
+       const year = createdAt.getFullYear();
+
+       // ค้นหาข้อมูลรายปี
+       const yearlyProfitIndex = ReportProfits.findIndex(
+       (yearly) => yearly.year === year);
+
+       if (yearlyProfitIndex !== -1) {
+         // ถ้ามีข้อมูลรายปีแล้ว
+         ReportProfits[yearlyProfitIndex].totalall +=  calculatorrate(item.alltotal, item.rateprice);
+         ReportProfits[yearlyProfitIndex].totalProfit += calculatorrate(item?.alltotal*(item?.commissionpercent/100),item?.rateprice);
+         ReportProfits[yearlyProfitIndex].jobCount += 1;
+         } else {
+         // ถ้ายังไม่มีข้อมูลรายปี
+         ReportProfits.push({
+           year: year,
+           totalall:calculatorrate(item.alltotal, item.rateprice),
+           totalProfit: calculatorrate(item?.alltotal*(item?.commissionpercent/100),item?.rateprice),
+           jobCount: 1,
+         });
+   }
+     }
+      })
+      return res.status(200).json({ status: true,header:header,dashboard:dashboard,user:user,ReportProfits:ReportProfits});
+      
+  }catch(error){
     return res.status(500).send({status:false,error:error.message});
   }
 }

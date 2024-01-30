@@ -9,8 +9,8 @@ router.post('/',auth.procurement,purchaseorder.add)
 //ดึงข้อมูลทั้งหมด
 router.get('/',auth.all,purchaseorder.getall)
 
-//ดึงข้อมูล ตาม id ลูกค้า
-router.get("/byquotation/:id",auth.all,purchaseorder.getquotation)
+//ดึงข้อมูล ตาม  order_id
+router.get("/bypo/:id",auth.all,purchaseorder.getorder)
 
 //ดึงข้อมูล by id
 router.get('/byid/:id',auth.all,purchaseorder.getbyid)

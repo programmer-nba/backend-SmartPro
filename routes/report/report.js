@@ -17,5 +17,6 @@ router.get("/getreportprice2",auth.all,Report.reportpriceyear)
 router.post("/getreportsale",auth.all,Report.reportsaleall)
 // dashboard 
 router.post("/getdashboardadmin",auth.all,Report.dashboardadmin);
-
+// dashboard sale
+router.post("/getdashboardsale/",auth.all,Report.dashboardsale);
 module.exports = router;

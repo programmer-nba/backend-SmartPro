@@ -1,9 +1,10 @@
+const Order = require("../../models/order/order.schema");
 const Purchaseorder = require("../../models/purchaseorder/purchaseorder.schema") 
 
 //เพิ่มใบสั่งซื้อสินค้าเรียบร้อยแล้ว
 module.exports.add = async (req, res) => {
   try {
-    const {supplier_id,sale_id,procurement_id,quotation_id,productdetail,rate,ratename,rateprice,ratesymbol,total,tax,alltotal} = req.body
+    const {supplier_id,sale_id,procurement_id,productdetail,rate,ratename,rateprice,ratesymbol,total,tax,alltotal,order_id} = req.body
     const startDate = new Date();
     // สร้างวันที่ของวันถัดไป
     const endDate = new Date();
@@ -21,11 +22,13 @@ module.exports.add = async (req, res) => {
     const referenceNumber = String(purchaseorderprice.length).padStart(5, '0')
     const refno = `PO${currentDate}${referenceNumber}`
     
+    const findquotation = await Order.findById(order_id)
     const data = new Purchaseorder({
         supplier_id: supplier_id ,//(บริษัทซัพพลายเออร์)
         sale_id:sale_id,//(รหัสSales Department )
         procurement_id:procurement_id, //(รหัส procurement)
-        quotation_id:quotation_id, //รหัสใบสั่งซื้อสินค้าเรียบร้อยแล้ว
+        quotation_id:findquotation?.quotation_id, //รหัสใบสั่งซื้อสินค้าเรียบร้อยแล้ว
+        order_id: order_id,
         refno:refno, //(เลขที่เอกสาร)
         date :Date.now(), //(วันที่ลงเอกสาร)
         productdetail:productdetail,
@@ -37,7 +40,6 @@ module.exports.add = async (req, res) => {
         tax:tax, //(หักภาษี 7 %)
         alltotal:alltotal, //(ราคารวมทั้งหมด)
       });
-
       const add = await data.save();
       return res.status(200).send({status: true,message:"คุณได้เพิ่มข้อมูลใบสั่งซื้อสินค้าแล้ว",data: add});
   } catch (error) {
@@ -61,9 +63,9 @@ module.exports.getall = async (req, res) => {
   }
 };
 
-module.exports.getquotation = async (req, res) => {
+module.exports.getorder = async (req, res) => {
     try {
-        const purchaseorderdata = await Purchaseorder.find({ quotation_id: req.params.id })
+        const purchaseorderdata = await Purchaseorder.find({ order_id: req.params.id })
         .populate('supplier_id')
         .populate('sale_id')
         .populate('procurement_id');

@@ -7,6 +7,7 @@ const purchaseorderSchema = new mongoose.Schema(
     sale_id:{type: mongoose.Schema.Types.ObjectId,ref:'user',required:true},//(รหัสSales Department )
     procurement_id:{type: mongoose.Schema.Types.ObjectId,ref:'user',required:true}, //(รหัส procurement)
     quotation_id:{type: mongoose.Schema.Types.ObjectId,ref:'quotation',required:true}, //รหัสใบเสนอราคา
+    order_id:{type:mongoose.Schema.Types.ObjectId,ref:'order',required:true},
     refno:{type:String,default:""}, //(เลขที่เอกสาร)
     date :{type:Date,default:Date.now()}, //(วันที่ลงเอกสาร)
     productdetail:{type:[{
@@ -22,16 +23,13 @@ const purchaseorderSchema = new mongoose.Schema(
         rate_symbol: {type:String},
         supplier_id:{type: mongoose.Schema.Types.ObjectId,ref:'supplier'},
 	      total:{type:Number} //(ราคารวมในสินค้า)
-    }],default:null},
-    
+    }],default:null}, 
     ////
     rate:{type: mongoose.Schema.Types.ObjectId,ref:'rate',default:null},
     ratename:{type:String,default:""},
     rateprice:{type:Number,default:0},
     ratesymbol: {type:String,default:""},
-    ////
     total:{type:Number,default:0}, //(ราคารวมสินค้า)
-    //
     tax:{type:Number,default:0}, //(หักภาษี 7 %)
     alltotal:{type:Number,default:0}, //(ราคารวมทั้งหมด)
   
