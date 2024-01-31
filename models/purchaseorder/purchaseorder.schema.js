@@ -17,6 +17,7 @@ const purchaseorderSchema = new mongoose.Schema(
         image:{type:String},
         quantity:{type:Number},//(จำนวน)
         price :{type:Number},
+        unit:{type:String},
         rate: {type:mongoose.Schema.Types.ObjectId,ref:'rate'},
         rate_name: {type:String},
         rate_rateprice: {type:Number},
@@ -32,8 +33,30 @@ const purchaseorderSchema = new mongoose.Schema(
     total:{type:Number,default:0}, //(ราคารวมสินค้า)
     tax:{type:Number,default:0}, //(หักภาษี 7 %)
     alltotal:{type:Number,default:0}, //(ราคารวมทั้งหมด)
-  
-
+    //เพิ่มต่อ
+	  statusapprove:{type:Boolean,default:false},
+	  approvedetail:{type:[{
+      status:{type:String},
+      date:{type:Date,default:Date.now()}
+    }],default:null},
+	  statusshipping:{type:Boolean,default:false},
+	  shippingdetail:{type:[{
+      status:{type:String},
+      date:{type:Date,default:Date.now()}
+    }],default:null},
+	  //เก็บข้อมูล
+	  hscode:{type:String,default:""},
+    importtax:{type:Number,default:0},//ภาษีนำเข้า
+    shippingcost:{type:Number,default:0}, //ค่าขนส่ง
+    operationcost :{type:Number,default:0}, //ค่าดำเนินงานต่างๆ
+    //
+    imageproduct:{type:String,default:""}, //เก็บข้อมูลรูปภาพสินค้า
+    serialnumber:{type:String,default:""},
+    dateget: {type:Date,default:Date.now()},//วันที่ได้รับสินค้า
+    warranty:{type:Date,default:Date.now()} ,//ระยะเวลารับประกันสินค้า
+    deliverystatus:{type:String,default:""}, //ปรมาณว่าจะส่งตามดิวไหม 
+    file:{type:String,default:""},
+    statusshippingcustomer: {type:Boolean,default:false},
   },
   {timestamps: true}
 );

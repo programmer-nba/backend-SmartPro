@@ -149,6 +149,7 @@ module.exports.openop = async (req,res)=>{
       image:item?.image,
       quantity:item?.quantity,//(จำนวน)
       price :item?.price,
+      unit: item?.unit,
       rate: item?.rate,
       rate_name: item?.rate_name,
       rate_rateprice: item?.rate_rateprice,
@@ -174,6 +175,8 @@ module.exports.openop = async (req,res)=>{
         total:total, //(ราคารวมสินค้า)
         tax:(total*7)/100, //(หักภาษี 7 %)
         alltotal:total+((total*7)/100), //(ราคารวมทั้งหมด)
+        statusapprove:false,
+        approvedetail:[{status:"รออนุมัติ",date:Date.now()}]
       });
    
       const add = await data.save();

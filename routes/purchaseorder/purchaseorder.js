@@ -21,5 +21,9 @@ router.put('/:id',auth.procurement,purchaseorder.edit)
 //ลบข้อมูลใบสั่งซื้อสินค้า
 router.delete('/:id',auth.procurement,purchaseorder.delete)
 
+router.put("/admin/accept/:id",auth.verifyTokenadmin,purchaseorder.accept);
 
+router.put("/shipping/:id",auth.procurement,purchaseorder.productshipped);
+router.put("/imageproduct/:id",auth.procurement,purchaseorder.imageproduct);
+router.put("/file/:id",auth.procurement,purchaseorder.file);
 module.exports = router;
