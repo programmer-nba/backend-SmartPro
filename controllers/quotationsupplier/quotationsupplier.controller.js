@@ -177,9 +177,6 @@ module.exports.edit = async (req, res) => {
         dateoffer:dateoffer, // (วันที่เสนอไป)
         payment :payment,//(การจ่ายเงิน)
         remark:remark, //(หมายเหตุ)
-      
-        filequotation:"",
-        fileemail:""
       }
     const edit = await Quotationsupplier.findByIdAndUpdate(id, data, { new: true });
     return res
@@ -356,3 +353,59 @@ module.exports.getbyproduct = async (req, res) => {
   }
 };
 
+
+module.exports.getbysupplierproduct = async (req, res) => {
+  try {
+    const id = req.params.id
+    const quotationsupplierdata = await Quotationsupplier.find({supplier_id:id})
+    .populate({ path: "supplier_id", select: { "name": 1, "categoryofproducts": 1 } });
+
+    if(quotationsupplierdata == undefined)
+    {
+      return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
+    }
+    ///////////
+    const productdata = await Product.find({supplier_id:id})
+      .populate({ path: "rate"})
+      .populate({ path: "quotationsupplier_id"})
+      .populate({ path: "producttype", select: "name" })
+      .populate({ path: "supplier_id", select: { "name": 1, "categoryofproducts": 1 } });
+      /////////
+
+      const mappedData = quotationsupplierdata.map(item => {
+        const productmap =  productdata.filter(items=> JSON.parse(JSON.stringify(items.quotationsupplier_id._id))  == JSON.parse(JSON.stringify(item._id)))
+      return {
+      _id: item._id,
+      quotationnumber: item.quotationnumber,
+      originproducts: item.originproducts,
+      order_code: item.order_code,
+      delivery: item.delivery,
+      dateoffer: item.dateoffer,
+      payment: item.payment,
+      remark: item.remark,
+     
+      supplier_id: {
+        _id: item.supplier_id._id,
+        name: item.supplier_id.name,
+        categoryofproducts: item.supplier_id.categoryofproducts
+      },
+      filequotation: item.filequotation,
+      fileemail: item.fileemail,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+      __v: item.__v,
+      //เพิ่มสินค้า
+      product:productmap,
+      };
+    });
+
+    if (! mappedData) {
+      return res
+        .status(404)
+        .send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
+    }
+    return res.status(200).send({ status: true, data:  mappedData });
+  } catch (error) {
+    return res.status(500).send({ status: false, error: error.message });
+  }
+};
