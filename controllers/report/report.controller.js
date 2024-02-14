@@ -1,6 +1,7 @@
 const Quotation = require("../../models/quotation/quotation.schema");
 const Producttype = require("../../models/product/producttype.schema");
 const User = require("../../models/user/user.schema");
+const Order = require("../../models/order/order.schema");
 module.exports.reportquotationprice = async (req, res) => {
   try {
     //รายเดือน
@@ -117,7 +118,7 @@ module.exports.reportquotationprice = async (req, res) => {
     const sale = await Quotation.aggregate([
       {
         $group: {
-          _id: "$user_id",
+          _id: "$sale_id",
           yearquotations: { $sum: 1 }, // นับจำนวนใบเสนอราคาทั้งหมด
         },
       },
@@ -161,7 +162,7 @@ module.exports.reportquotationprice = async (req, res) => {
       },
       {
         $group: {
-          _id: "$user_id",
+          _id: "$sale_id",
           yearquotations: { $sum: 1 }, // นับจำนวนใบเสนอราคาทั้งหมด
         },
       },
@@ -204,7 +205,7 @@ module.exports.reportquotationprice = async (req, res) => {
       },
       {
         $group: {
-          _id: "$user_id",
+          _id: "$sale_id",
           yearquotations: { $sum: 1 }, // นับจำนวนใบเสนอราคาทั้งหมด
         },
       },
@@ -243,7 +244,7 @@ module.exports.reportquotationprice = async (req, res) => {
       },
       {
         $group: {
-          _id: "$user_id",
+          _id: "$sale_id",
           yearquotations: { $sum: 1 }, // นับจำนวนใบเสนอราคาทั้งหมด
         },
       },
@@ -284,56 +285,57 @@ module.exports.reportquotationprice = async (req, res) => {
   }
 };
 
+//เสร็จ
 module.exports.reportquotation = async (req, res) => {
   try {
     const yearquotation = [];
     const quarterquotation = [];
     const monthquotation = [];
 
-    const quotationdata = await Quotation.find().populate("user_id").populate("customer_id");
-    quotationdata.forEach((items) => {
+    const orderdata = await Order.find().populate("quotation_id").populate("sale_id").populate("customer_id");
+    orderdata.forEach((items) => {
+      
       // ส่วนของรายปี แต่ละปี
       const year = new Date(items.createdAt).getFullYear();
       const find = yearquotation.findIndex((item) => item.year == year);
       if (find != -1) {
         yearquotation[find].count += 1;
-        yearquotation[find].totalprofit += items.alltotal;
+        yearquotation[find].totalprofit += (items?.quotation_id !=null? items?.quotation_id?.alltotal:0);
 
-        if (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status == "ดีลงานผ่าน") {
+        if (items?.dealstatus == true) {
           yearquotation[find].pass += 1;
         }
         
-        if (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status =="ดีลงานไม่ผ่าน") {
+        if (items?.dealstatus == false) {
           yearquotation[find].nopass += 1;
         }
       } else {
         yearquotation.push({
           year: year,
           count: 1,
-          totalprofit: items.alltotal,
-          pass:(items.statusdealdetail[items.statusdealdetail?.length - 1]?.status == "ดีลงานผ่าน"? 1: 0),
-          nopass:(items.statusdealdetail[items.statusdealdetail?.length - 1]?.status == "ดีลงานไม่ผ่าน"? 1: 0)
-        
+          totalprofit: items.quotation_id?.alltotal,
+          pass:(items.dealstatus == true? 1: 0),
+          nopass:(items.dealstatus == false? 1: 0)
         });
       }
 
       //ส่วนของรายไตรมาส
       const month = new Date(items.createdAt).getMonth() + 1; // เดือนเริ่มที่ 1
       const quarter = Math.ceil(month / 3);
-    
+      
       // หา index ของไตรมาสนั้น ๆ
       const findQuarter = quarterquotation.findIndex(item => item.year === year && item.quarter === quarter);
 
       if (findQuarter !== -1) {
         // ถ้ามีไตรมาสนั้น ๆ แล้ว
           quarterquotation[findQuarter].count += 1;
-          quarterquotation[findQuarter].totalprofit += items.alltotal;
+          quarterquotation[findQuarter].totalprofit += (items?.quotation_id !=null? items?.quotation_id?.alltotal:0);
 
-        if (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน") {
+        if (items.dealstatus == true) {
             quarterquotation[findQuarter].pass += 1;
         }
 
-        if (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานไม่ผ่าน") {
+        if (items.dealstatus == false) {
             quarterquotation[findQuarter].nopass += 1;
         }
     } else {
@@ -342,24 +344,26 @@ module.exports.reportquotation = async (req, res) => {
             year: year,
             quarter: quarter,
             count: 1,
-            totalprofit: items.alltotal,
-            pass: (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน" ? 1 : 0),
-            nopass: (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานไม่ผ่าน" ? 1 : 0),
+            totalprofit: (items?.quotation_id !=null? items?.quotation_id?.alltotal:0),
+            pass: (items.dealstatus == true ? 1 : 0),
+            nopass: (items.dealstatus == false ? 1 : 0),
         });
 
     }
+   
             // ส่วนของรายเดือน 
             const findMonth = monthquotation.findIndex(item => item.year === year && item.month === month);
             if (findMonth !== -1) {
                 // ถ้ามีรายเดือนนั้น ๆ แล้ว
                 monthquotation[findMonth].count += 1;
-                monthquotation[findMonth].totalprofit += items.alltotal;
+                monthquotation[findMonth].totalprofit += (items?.quotation_id !=null? items?.quotation_id?.alltotal:0);
+               
     
-            if (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน") {
+            if (items.dealstatus == true) {
                 monthquotation[findMonth].pass += 1;
               }
     
-              if (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานไม่ผ่าน") {
+              if (items.dealstatus == false) {
                   monthquotation[findMonth].nopass += 1;
               }
         } else {
@@ -368,10 +372,11 @@ module.exports.reportquotation = async (req, res) => {
                 year: year,
                 month: month,
                 count: 1,
-                totalprofit: items.alltotal,
-                pass: (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน" ? 1 : 0),
-                nopass: (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานไม่ผ่าน" ? 1 : 0),
+                totalprofit: (items?.quotation_id !=null? (items?.quotation_id !=null? items?.quotation_id?.alltotal:0):0),
+                pass: (items.dealstatus == true ? 1 : 0),
+                nopass: (items.dealstatus == false ? 1 : 0),
             });
+           
           }
     });
     // เรียง yearquotation
@@ -397,19 +402,19 @@ module.exports.reportquotation = async (req, res) => {
     const currentYear = new Date().getFullYear();
 
     // กรองใบเสนอราคาในเดือนปัจจุบัน
-    const currentMonthData = quotationdata.filter(items => new Date(items.createdAt).getMonth() + 1 == currentMonth && new Date(items.createdAt).getFullYear() == currentYear);
+    const currentMonthData = orderdata.filter(items => new Date(items.createdAt).getMonth() + 1 == currentMonth && new Date(items.createdAt).getFullYear() == currentYear);
 
     // ยอดรวมใบเสนอราคาในเดือนปัจจุบัน
     const totalquotation = currentMonthData.length;
 
     // ยอดรวมราคาของใบเสนอราคาในเดือนปัจจุบัน
-    const pricequotation = currentMonthData.reduce((total, item) => total + calculatorrate(item.alltotal,item.rateprice), 0);
-
+    const pricequotation = currentMonthData.reduce((total, item) => total +  (item.quotation_id != null ? calculatorrate(item?.quotation_id?.alltotal,item?.quotation_id?.rateprice):0), 0);
+   
     // ยอดรวมงานที่ผ่านในเดือนปัจจุบัน
-    const passedJobs = currentMonthData.filter(item => item.statusdealdetail[item.statusdealdetail.length - 1]?.status === "ดีลงานผ่าน").length;
+    const passedJobs = currentMonthData.filter(item => item.dealstatus == true).length;
 
     // ยอดรวมงานที่ไม่ผ่านในเดือนปัจจุบัน
-    const notPassedJobs = currentMonthData.filter(item => item.statusdealdetail[item.statusdealdetail.length - 1]?.status === "ดีลงานไม่ผ่าน").length;
+    const notPassedJobs = currentMonthData.filter(item => item.dealstatus == false).length;
 
     const dashboard ={
       totalquotation:totalquotation,
@@ -421,34 +426,37 @@ module.exports.reportquotation = async (req, res) => {
     //รายงาน ใบเสนอราคาของ Sales Department
     const salequotation = [];
     currentMonthData.forEach((items)=>{
-      const find = salequotation.findIndex((item) => JSON.parse(JSON.stringify(item.user_id?._id)) == JSON.parse(JSON.stringify(items.user_id?._id)));
+      const find = salequotation.findIndex((item) => JSON.parse(JSON.stringify(item.sale_id?._id)) == JSON.parse(JSON.stringify(items.sale_id?._id)));
+      
       if (find !== -1) {
         salequotation[find].count += 1;
-        salequotation[find].totalAmount += calculatorrate(items.alltotal,items.rateprice);
+        salequotation[find].totalAmount += ( items.quotation_id != null ? calculatorrate((items?.quotation_id !=null? items?.quotation_id?.alltotal:0),items?.quotation_id?.rateprice):0);
     
-        if (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน") {
+        if (items.dealstatus == true) {
           salequotation[find].passedJobs += 1;
-        } else if (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานไม่ผ่าน") {
+        } else if (items.dealstatus == false) {
           salequotation[find].notPassedJobs += 1;
         }
       } else {
+        
         salequotation.push({
-          user_id: items.user_id?._id,
-          firstname: items.user_id?.firstname,
-          lastname:items.user_id?.lastname,
-          nickname:items.user_id?.nickname,
+          sale_id: items.sale_id?._id,
+          firstname: items.sale_id?.firstname,
+          lastname:items.sale_id?.lastname,
+          nickname:items.sale_id?.nickname,
           count: 1,
-          totalAmount: calculatorrate(items.alltotal,items.rateprice),
-          passedJobs: (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน" ? 1 : 0),
-          notPassedJobs: (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานไม่ผ่าน" ? 1 : 0),
+          totalAmount: ( items.quotation_id != null ? calculatorrate((items?.quotation_id !=null? items?.quotation_id?.alltotal:0),items?.quotation_id?.rateprice):0),
+          passedJobs: (items.dealstatus === true ? 1 : 0),
+          notPassedJobs: (items.dealstatus == false ? 1 : 0),
         });
+        
       }
-
+      
     })
-
+    
     //รายงานรายละเอียดที่ขายไม่ผ่านใบเสนอราคา
-    const nopassquotation = currentMonthData.filter(item=>item?.statusdealdetail[item.statusdealdetail?.length - 1]?.status == "ดีลงานไม่ผ่าน");
-
+    const nopassquotation = currentMonthData.filter(item=>item?.dealstatus == false);
+   
 
     const header = convertToThaiMonth(currentMonth)+" "+currentYear;
     return res.status(200).json({ status: true, header:header, yearquotation: yearquotation,quarter:quarterquotation,monthquotation:monthquotation ,dashboard:dashboard,
@@ -458,30 +466,30 @@ module.exports.reportquotation = async (req, res) => {
     return res.status(500).send({ status: false, error: error.message });
   }
 };
-
+//เสร็จ
 module.exports.reportquotationbyid = async (req,res)=>{
   try {
     const id = req.body.id
-    const quotationdata = await Quotation.find().populate("user_id").populate("customer_id");
+    const orderdata = await Order.find().populate("quotation_id").populate("sale_id").populate("customer_id");
     let currentMonthData ='';
     let header = '';
     if(id =="month")
     {
       const currentMonth = new Date().getMonth() + 1;
       const currentYear = new Date().getFullYear();
-      currentMonthData = quotationdata.filter(items => new Date(items.createdAt).getMonth() + 1 == currentMonth && new Date(items.createdAt).getFullYear() == currentYear);
+      currentMonthData = orderdata.filter(items => new Date(items.createdAt).getMonth() + 1 == currentMonth && new Date(items.createdAt).getFullYear() == currentYear);
       header = convertToThaiMonth(currentMonth)+" "+currentYear;
     }
     if (id === "quarter") {
       // กรณีเลือก "quarter"
       const currentQuarter = getQuarter(new Date());
-      currentMonthData = quotationdata.filter(items => getQuarter(new Date(items.createdAt)) === currentQuarter);
+      currentMonthData = orderdata.filter(items => getQuarter(new Date(items.createdAt)) === currentQuarter);
       header = `ไตรมาสที่ ${currentQuarter}  ปี ${new Date().getFullYear()}`;
     }
     if (id === "year") {
       // กรณีเลือก "year"
       const currentYear = new Date().getFullYear();
-      currentMonthData = quotationdata.filter(items => new Date(items.createdAt).getFullYear() == currentYear);
+      currentMonthData = orderdata.filter(items => new Date(items.createdAt).getFullYear() == currentYear);
       header = `ปี ${currentYear}`;
     }
     if(id =="other"){
@@ -489,7 +497,7 @@ module.exports.reportquotationbyid = async (req,res)=>{
       if(date.length ==2){
         const startDate = new Date(date[0]);
         const endDate = new Date(date[1]);
-        currentMonthData = quotationdata.filter((item) => {
+        currentMonthData = orderdata.filter((item) => {
           const itemDate = new Date(item.createdAt);
           return itemDate >= startDate && itemDate <= endDate;
         });
@@ -512,12 +520,12 @@ module.exports.reportquotationbyid = async (req,res)=>{
     const totalquotation = currentMonthData.length;
 
     // ยอดรวมราคาของใบเสนอราคาในเดือนปัจจุบัน
-    const pricequotation = ( currentMonthData.length >0 ? currentMonthData.reduce((total, item) => total + calculatorrate(item.alltotal,item.rateprice), 0):0);
+    const pricequotation = ( currentMonthData.length >0 ? currentMonthData.reduce((total, item) => total + calculatorrate(item?.quotation_id?.alltotal,item?.quotation_id?.rateprice), 0):0);
     // ยอดรวมงานที่ผ่านในเดือนปัจจุบัน
-    const passedJobs = currentMonthData.filter(item => item.statusdealdetail[item.statusdealdetail.length - 1]?.status === "ดีลงานผ่าน").length;
+    const passedJobs = currentMonthData.filter(item => item?.dealstatus == true).length;
 
     // ยอดรวมงานที่ไม่ผ่านในเดือนปัจจุบัน
-    const notPassedJobs = currentMonthData.filter(item => item.statusdealdetail[item.statusdealdetail.length - 1]?.status === "ดีลงานไม่ผ่าน").length;
+    const notPassedJobs = currentMonthData.filter(item => item.dealstatus == false).length;
 
     const dashboard ={
       totalquotation:totalquotation,
@@ -529,33 +537,33 @@ module.exports.reportquotationbyid = async (req,res)=>{
     //รายงาน ใบเสนอราคาของ Sales Department
     const salequotation = [];
     currentMonthData.forEach((items)=>{
-      const find = salequotation.findIndex((item) => JSON.parse(JSON.stringify(item.user_id?._id)) == JSON.parse(JSON.stringify(items.user_id?._id)));
+      const find = salequotation.findIndex((item) => JSON.parse(JSON.stringify(item.sale_id?._id)) == JSON.parse(JSON.stringify(items.sale_id?._id)));
       if (find !== -1) {
         salequotation[find].count += 1;
-        salequotation[find].totalAmount += calculatorrate(items.alltotal,items.rateprice);
+        salequotation[find].totalAmount += calculatorrate((items?.quotation_id !=null? items?.quotation_id?.alltotal:0),items?.quotation_id?.rateprice);
     
-        if (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน") {
+        if (items.dealstatus == true) {
           salequotation[find].passedJobs += 1;
-        } else if (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานไม่ผ่าน") {
+        } else if (items.dealstatus == false) {
           salequotation[find].notPassedJobs += 1;
         }
       } else {
         salequotation.push({
-          user_id: items.user_id?._id,
-          firstname: items.user_id?.firstname,
-          lastname:items.user_id?.lastname,
-          nickname:items.user_id?.nickname,
+          sale_id: items.sale_id?._id,
+          firstname: items.sale_id?.firstname,
+          lastname:items.sale_id?.lastname,
+          nickname:items.sale_id?.nickname,
           count: 1,
-          totalAmount: calculatorrate(items.alltotal,items.rateprice),
-          passedJobs: (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน" ? 1 : 0),
-          notPassedJobs: (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานไม่ผ่าน" ? 1 : 0),
+          totalAmount: calculatorrate(items.quotation_id.alltotal,items.quotation_id.rateprice),
+          passedJobs: (items.dealstatus == true? 1 : 0),
+          notPassedJobs: (items.dealstatus == false ? 1 : 0),
         });
       }
 
     })
 
     //รายงานรายละเอียดที่ขายไม่ผ่านใบเสนอราคา
-    const nopassquotation = currentMonthData.filter(item=>item?.statusdealdetail[item.statusdealdetail?.length - 1]?.status == "ดีลงานไม่ผ่าน");
+    const nopassquotation = currentMonthData.filter(item=>item?.dealstatus == false);
     return res.status(200).json({ status: true, header:header,dashboard:dashboard,salequotation:salequotation,nopassquotation:nopassquotation});
   }catch (error) {
     return res.status(500).send({ status: false, error: error.message });
@@ -564,11 +572,18 @@ module.exports.reportquotationbyid = async (req,res)=>{
   
 }
 
-
+//เสร็จ
 module.exports.reportprice = async (req,res)=>{
   try{
       const id = req.body.id
-      const quotationdata = await Quotation.find().populate('customer_id').populate('productdetail.product_id').populate('user_id'); 
+      const orderdata = await Order.find().populate({
+        path:'quotation_id',
+        populate:[
+          {path:'customer_id'},
+          {path:'user_id'},
+          {path:'productdetail.product_id'},
+        ]
+      }).populate("sale_id").populate("customer_id");
 
       let currentdata = ''
       let header = ''
@@ -577,19 +592,19 @@ module.exports.reportprice = async (req,res)=>{
       {
         const currentMonth = new Date().getMonth() + 1;
         const currentYear = new Date().getFullYear();
-        currentdata = quotationdata.filter(items => new Date(items.createdAt).getMonth() + 1 == currentMonth && new Date(items.createdAt).getFullYear() == currentYear);
+        currentdata = orderdata.filter(items => new Date(items.createdAt).getMonth() + 1 == currentMonth && new Date(items.createdAt).getFullYear() == currentYear);
         header = convertToThaiMonth(currentMonth)+" "+currentYear;
       }
     else if (id === "quarter") {
       // กรณีเลือก "quarter"
       const currentQuarter = getQuarter(new Date());
-      currentdata = quotationdata.filter(items => getQuarter(new Date(items.createdAt)) === currentQuarter);
+      currentdata = orderdata.filter(items => getQuarter(new Date(items.createdAt)) === currentQuarter);
       header = `ไตรมาสที่ ${currentQuarter}  ปี ${new Date().getFullYear()}`;
     }
     else if (id === "year") {
       // กรณีเลือก "year"
       const currentYear = new Date().getFullYear();
-      currentdata = quotationdata.filter(items => new Date(items.createdAt).getFullYear() == currentYear);
+      currentdata = orderdata.filter(items => new Date(items.createdAt).getFullYear() == currentYear);
       header = `ปี ${currentYear}`;
     }
     else if(id =="other"){
@@ -597,7 +612,7 @@ module.exports.reportprice = async (req,res)=>{
       if(date.length ==2){
         const startDate = new Date(date[0]);
         const endDate = new Date(date[1]);
-        currentdata = quotationdata.filter((item) => {
+        currentdata = orderdata.filter((item) => {
           const itemDate = new Date(item.createdAt);
           return itemDate >= startDate && itemDate <= endDate;
         });
@@ -616,46 +631,47 @@ module.exports.reportprice = async (req,res)=>{
       }
     }
     else{
-      currentdata= quotationdata
+      currentdata= orderdata
       header= "ทั้งหมด"
     }
-    currentdata = currentdata.filter(items => items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน");
+    currentdata = currentdata.filter(items => items.dealstatus == true);
 
     const reportcustomersale = []; 
     currentdata.forEach((items)=>{
       const find = reportcustomersale.findIndex((item) => JSON.parse(JSON.stringify(item.customer_id?._id)) == JSON.parse(JSON.stringify(items.customer_id?._id)));
       if (find !== -1) {
-        reportcustomersale[find].count += (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน"? 1 :0);
-        reportcustomersale[find].totalAmount += (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน"? calculatorrate(items.alltotal, items.rateprice) :0) ;
-        reportcustomersale[find].totalprofit +=(items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน"? calculatorrate(items.totalprofit,items.rateprice) :0) ;
+        reportcustomersale[find].count += (items.dealstatus == true? 1 :0);
+        reportcustomersale[find].totalAmount += (items.dealstatus == true? calculatorrate(items.quotation_id.alltotal, items.quotation_id.rateprice) :0) ;
+        reportcustomersale[find].totalprofit +=(items.dealstatus == true? calculatorrate(items.quotation_id.totalprofit,items.quotation_id.rateprice) :0) ;
       } else {
         reportcustomersale.push({
           customer_id: items.customer_id?._id,
           name: items.customer_id?.name,
-          count: (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน"? 1 :0),
-          totalAmount:(items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน"? calculatorrate(items.alltotal, items.rateprice) :0) ,
-          totalprofit: (items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน"? calculatorrate(items.totalprofit,items.rateprice) :0) 
+          count: (items.dealstatus == true? 1 :0),
+          totalAmount:(items.dealstatus == true? calculatorrate(items.quotation_id.alltotal, items.quotation_id.rateprice) :0) ,
+          totalprofit: (items.dealstatus == true ? calculatorrate(items.quotation_id.totalprofit,items.quotation_id.rateprice) :0) 
         });
       }
     })
     //ยอดขาย sale
     const salequotation = [];
     currentdata.forEach((items)=>{
-      const find = salequotation.findIndex((item) => JSON.parse(JSON.stringify(item.user_id?._id)) == JSON.parse(JSON.stringify(items.user_id?._id)));
+      const find = salequotation.findIndex((item) => JSON.parse(JSON.stringify(item.sale_id?._id)) == JSON.parse(JSON.stringify(items.sale_id?._id)));
+      
       if (find !== -1) {
         salequotation[find].count += 1;
-        salequotation[find].totalAmount += calculatorrate(items.alltotal, items.rateprice);
-        salequotation[find].totalprofit += calculatorrate(items.totalprofit, items.rateprice);
+        salequotation[find].totalAmount += ( items.quotation_id != null ? calculatorrate(items.quotation_id.alltotal, items.quotation_id.rateprice):0);
+        salequotation[find].totalprofit +=  (items.quotation_id != null ? calculatorrate(items.quotation_id.totalprofit, items.quotation_id.rateprice):0) ;
       } else {
         
         salequotation.push({
-          user_id: items.user_id?._id,
-          firstname: items.user_id?.firstname,
-          lastname:items.user_id?.lastname,
-          nickname:items.user_id?.nickname,
+          sale_id: items.sale_id?._id,
+          firstname: items.sale_id?.firstname,
+          lastname:items.sale_id?.lastname,
+          nickname:items.sale_id?.nickname,
           count: 1,
-          totalAmount: calculatorrate(items.alltotal,items.rateprice),
-          totalprofit:calculatorrate(items.totalprofit,items.rateprice)
+          totalAmount: ( items.quotation_id != null ? calculatorrate(items.quotation_id.alltotal, items.quotation_id.rateprice):0),
+          totalprofit:(items.quotation_id != null ? calculatorrate(items.quotation_id.totalprofit, items.quotation_id.rateprice):0)
         });
       }
 
@@ -673,21 +689,28 @@ module.exports.reportprice = async (req,res)=>{
         totalprofit:0
       });
     })
+    //น่าจะerror
     currentdata.forEach((items)=>{
-        items.productdetail.forEach((element)=>{
+      if(items?.quotation_id != null)
+      {
+        items?.quotation_id?.productdetail?.forEach((element)=>{
+         
           const find = reportproducttype.findIndex((item) => JSON.parse(JSON.stringify(item.producttype_id)) == JSON.parse(JSON.stringify(element.product_id?.producttype)));
+          
           if(find !== -1){
             reportproducttype[find].quantity += element.quantity;
             reportproducttype[find].totalAmount +=  calculatorrate(element.total, element.rate_rateprice)
             reportproducttype[find].totalprofit += calculatorrate((((element.priceprofit-element.price)*element.quantity)-element.numdiscount), element.rate_rateprice)
           } 
         })
+      }
+        
       
     })
 
     //report กำไรที่ได้ของงาน /เดือน กำไรหาจาก priceprofit
     const ReportProfits = [];
-    const dataprofits = quotationdata.filter(items => items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน");
+    const dataprofits = orderdata.filter(items => items.dealstatus == true);
     dataprofits.forEach((item)=>{
       if(id == "month"){
         const createdAt = new Date(item.createdAt);
@@ -701,16 +724,16 @@ module.exports.reportprice = async (req,res)=>{
       
         if (monthlyProfitIndex !== -1) {
           // ถ้ามีข้อมูลรายเดือนแล้ว
-          ReportProfits[monthlyProfitIndex].totalall += calculatorrate(item.alltotal, item.rateprice);
-          ReportProfits[monthlyProfitIndex].totalProfit += calculatorrate(item.totalprofit, item.rateprice);
+          ReportProfits[monthlyProfitIndex].totalall += calculatorrate(item?.quotation_id?.alltotal, item?.quotation_id?.rateprice);
+          ReportProfits[monthlyProfitIndex].totalProfit += calculatorrate(item?.quotation_id?.totalprofit, item?.quotation_id?.rateprice);
           ReportProfits[monthlyProfitIndex].jobCount += 1;
         } else {
           // ถ้ายังไม่มีข้อมูลรายเดือน
           ReportProfits.push({
             year: year,
             month: month,
-            totalall:calculatorrate(item.alltotal, item.rateprice),
-            totalProfit: calculatorrate(item.totalprofit, item.rateprice),
+            totalall:calculatorrate(item?.quotation_id?.alltotal, item?.quotation_id?.rateprice),
+            totalProfit: calculatorrate(item?.quotation_id?.totalprofit, item?.quotation_id?.rateprice),
             jobCount: 1,
           });
         }
@@ -727,16 +750,16 @@ module.exports.reportprice = async (req,res)=>{
     
         if (quarterlyProfitIndex !== -1) {
           // ถ้ามีข้อมูลรายไตรมาสแล้ว
-          ReportProfits[quarterlyProfitIndex].totalall += calculatorrate(item.alltotal, item.rateprice)
-          ReportProfits[quarterlyProfitIndex].totalProfit += calculatorrate(item.totalprofit, item.rateprice);
+          ReportProfits[quarterlyProfitIndex].totalall += (item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0)
+          ReportProfits[quarterlyProfitIndex].totalProfit += (item.quotation_id != null ? calculatorrate(item.quotation_id.totalprofit, item.quotation_id.rateprice):0);
           ReportProfits[quarterlyProfitIndex].jobCount += 1;
         } else {
           // ถ้ายังไม่มีข้อมูลรายไตรมาส
           ReportProfits.push({
             year: year,
             quarter: quarter,
-            totalall:calculatorrate(item.alltotal, item.rateprice),
-            totalProfit: calculatorrate(item.totalprofit, item.rateprice),
+            totalall:(item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0),
+            totalProfit: (item.quotation_id != null ? calculatorrate(item.quotation_id.totalprofit, item.quotation_id.rateprice):0),
             jobCount: 1,
           });
         }
@@ -752,25 +775,25 @@ module.exports.reportprice = async (req,res)=>{
 
         if (yearlyProfitIndex !== -1) {
           // ถ้ามีข้อมูลรายปีแล้ว
-          ReportProfits[yearlyProfitIndex].totalall +=  calculatorrate(item.alltotal, item.rateprice);
-          ReportProfits[yearlyProfitIndex].totalProfit += calculatorrate(item.totalprofit, item.rateprice);
+          ReportProfits[yearlyProfitIndex].totalall +=  (item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0);
+          ReportProfits[yearlyProfitIndex].totalProfit += (item.quotation_id != null ? calculatorrate(item.quotation_id.totalprofit, item.quotation_id.rateprice):0);
           ReportProfits[yearlyProfitIndex].jobCount += 1;
           } else {
           // ถ้ายังไม่มีข้อมูลรายปี
           ReportProfits.push({
             year: year,
-            totalall:calculatorrate(item.alltotal, item.rateprice),
-            totalProfit: calculatorrate(item.totalprofit, item.rateprice),
+            totalall:(item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0),
+            totalProfit:  (item.quotation_id != null ? calculatorrate(item.quotation_id.totalprofit, item.quotation_id.rateprice):0),
             jobCount: 1,
           });
     }
       }
     })
     // คำนวณยอดขายทั้งหมด
-    const totalSales = currentdata.reduce((sum, item) => sum + calculatorrate(item.alltotal, item.rateprice), 0);
+    const totalSales = currentdata.reduce((sum, item) => sum + (item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0), 0);
     
     // คำนวณกำไรทั้งหมด
-    const totalProfit = currentdata.reduce((sum, item) => sum + calculatorrate(item.totalprofit, item.rateprice), 0);
+    const totalProfit = currentdata.reduce((sum, item) => sum +  (item.quotation_id != null ? calculatorrate(item.quotation_id.totalprofit, item.quotation_id.rateprice):0), 0);
 
     // คำนวณเฉลี่ยกำไร
     const averageProfitPercentage = (totalProfit / totalSales) * 100;
@@ -787,12 +810,22 @@ module.exports.reportprice = async (req,res)=>{
   } 
 }
 
+//เสร็๋จ
 module.exports.reportpriceyear = async (req,res)=>{
   try{
-    const quotationdata = await Quotation.find().populate('customer_id').populate('productdetail.product_id'); 
-    currentdata = quotationdata.filter(items => items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน");
+    const orderdata = await Order.find().populate({
+      path:'quotation_id',
+      populate:[
+        {path:'customer_id'},
+        {path:'user_id'},
+        {path:'productdetail.product_id'},
+      ]
+    }).populate("sale_id").populate("customer_id");
+
+    currentdata = orderdata.filter(items => items.dealstatus == true);
     
     const yearlyData = {};
+    
     currentdata.forEach((item) => {
   const createdAt = new Date(item.createdAt);
   const year = createdAt.getFullYear();
@@ -805,8 +838,8 @@ module.exports.reportpriceyear = async (req,res)=>{
     };
   }
 
-  yearlyData[year].totalSales += calculatorrate(item.alltotal, item.rateprice);
-  yearlyData[year].totalProfit += calculatorrate(item.totalprofit, item.rateprice);
+  yearlyData[year].totalSales += (item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0);
+  yearlyData[year].totalProfit += (item.quotation_id != null ? calculatorrate(item.quotation_id.totalprofit, item.quotation_id.rateprice):0);
   yearlyData[year].jobCount += 1;
     });
     // คำนวณ % เฉลี่ยกำไร / ยอดขาย / ปี
@@ -830,18 +863,19 @@ module.exports.reportpriceyear = async (req,res)=>{
   const yearlyProductSales = {};
 
 currentdata.forEach((item) => {
+  
   const createdAt = new Date(item.createdAt);
   const year = createdAt.getFullYear();
 
   if (!yearlyProductSales[year]) {
     yearlyProductSales[year] = {};
   }
-
-  item.productdetail.forEach((product) => {
+  
+  item?.quotation_id?.productdetail.forEach((product) => {
     const productType = product.product_id.producttype;
     const quantity = product.quantity;
-
-    const totalAmount = calculatorrate(product.total, product.rate_rateprice);
+    
+    const totalAmount = (item.quotation_id != null? calculatorrate(product.total, product.rate_rateprice):0);
 
     if (!yearlyProductSales[year][productType]) {
       yearlyProductSales[year][productType] = {
@@ -861,7 +895,9 @@ const productTypeIds = producttype.map((type) => type._id.toString());
 
 for (const year in yearlyProductSales) {
   const productTypeData = yearlyProductSales[year];
+ 
   productTypeIds.forEach((productTypeId) => {
+    
     const productType = productTypeData[productTypeId];
     if (productType) {
       console.log(productType.unit)
@@ -912,8 +948,8 @@ currentdata.forEach((item) => {
   }
 
   // เพิ่มยอดขายในเดือนนั้นๆ
-  monthlySalesData[year][month].totalSales += calculatorrate(item.alltotal, item.rateprice);
-  monthlySalesData[year][month].totalProfit += calculatorrate(item.totalprofit, item.rateprice);
+  monthlySalesData[year][month].totalSales += (item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0);
+  monthlySalesData[year][month].totalProfit += (item.quotation_id != null ? calculatorrate(item.quotation_id.totalprofit, item.quotation_id.rateprice):0);
 
   // คำนวณ % เฉลี่ยกำไร / ยอดขาย
   const averageProfitPercentage = (monthlySalesData[year][month].totalProfit / monthlySalesData[year][month].totalSales) * 100;
@@ -941,30 +977,37 @@ return res.status(200).json({ status: true,reportpriceprofityear:reportpriceprof
     return res.status(500).send({status:false,error:error.message});
   }
 }
-
+//
 module.exports.reportsaleall = async (req,res)=>{
   try{
     const id = req.body.id
-    const quotationdata = await Quotation.find().populate('user_id');
+    const orderdata = await Order.find().populate({
+      path:'quotation_id',
+      populate:[
+        {path:'customer_id'},
+        {path:'user_id'},
+        {path:'productdetail.product_id'},
+      ]
+    }).populate("sale_id").populate("customer_id");
     let currentdata = ''
     let header = ''
     if(id =="month")
       {
         const currentMonth = new Date().getMonth() + 1;
         const currentYear = new Date().getFullYear();
-        currentdata = quotationdata.filter(items => new Date(items.createdAt).getMonth() + 1 == currentMonth && new Date(items.createdAt).getFullYear() == currentYear);
+        currentdata = orderdata.filter(items => new Date(items.createdAt).getMonth() + 1 == currentMonth && new Date(items.createdAt).getFullYear() == currentYear);
         header = convertToThaiMonth(currentMonth)+" "+currentYear;
       }
     else if (id === "quarter") {
       // กรณีเลือก "quarter"
       const currentQuarter = getQuarter(new Date());
-      currentdata = quotationdata.filter(items => getQuarter(new Date(items.createdAt)) === currentQuarter);
+      currentdata = orderdata.filter(items => getQuarter(new Date(items.createdAt)) === currentQuarter);
       header = `ไตรมาสที่ ${currentQuarter}  ปี ${new Date().getFullYear()}`;
     }
     else if (id === "year") {
       // กรณีเลือก "year"
       const currentYear = new Date().getFullYear();
-      currentdata = quotationdata.filter(items => new Date(items.createdAt).getFullYear() == currentYear);
+      currentdata = orderdata.filter(items => new Date(items.createdAt).getFullYear() == currentYear);
       header = `ปี ${currentYear}`;
     }
     else if(id =="other"){
@@ -972,7 +1015,7 @@ module.exports.reportsaleall = async (req,res)=>{
       if(date.length ==2){
         const startDate = new Date(date[0]);
         const endDate = new Date(date[1]);
-        currentdata = quotationdata.filter((item) => {
+        currentdata = orderdata.filter((item) => {
           const itemDate = new Date(item.createdAt);
           return itemDate >= startDate && itemDate <= endDate;
         });
@@ -991,14 +1034,13 @@ module.exports.reportsaleall = async (req,res)=>{
       }
     }
     else{
-      currentdata= quotationdata
+      currentdata= orderdata
       header= "ทั้งหมด"
     }
-    currentdata = currentdata.filter(items => items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน");
-      ////
+    currentdata = currentdata.filter(items => items.dealstatus == true);
       //report กำไรที่ได้ของงาน /เดือน กำไรหาจาก priceprofit
     const ReportProfits = [];
-    const dataprofits = quotationdata.filter(items => items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน");
+    const dataprofits = orderdata.filter(items => items.dealstatus == true);
     dataprofits.forEach((item)=>{
       if(id == "month"){
         const createdAt = new Date(item.createdAt);
@@ -1012,15 +1054,15 @@ module.exports.reportsaleall = async (req,res)=>{
       
         if (monthlyProfitIndex !== -1) {
           // ถ้ามีข้อมูลรายเดือนแล้ว
-          ReportProfits[monthlyProfitIndex].totalall += calculatorrate(item.alltotal, item.rateprice);
-          ReportProfits[monthlyProfitIndex].commission += calculatorrate(item.alltotal*(item.commissionpercent/100),item.rateprice);
+          ReportProfits[monthlyProfitIndex].totalall += (item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0);
+          ReportProfits[monthlyProfitIndex].commission += (item.quotation_id != null? calculatorrate(item.quotation_id.alltotal*(item.commissionpercent/100),item.quotation_id.rateprice):0);
         } else {
           // ถ้ายังไม่มีข้อมูลรายเดือน
           ReportProfits.push({
             year: year,
             month: month,
-            totalall:calculatorrate(item.alltotal, item.rateprice),
-            commission: calculatorrate(item.alltotal*(item.commissionpercent/100),item.rateprice),
+            totalall:(item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0),
+            commission: (item.quotation_id != null? calculatorrate(item.quotation_id.alltotal*(item.commissionpercent/100),item.quotation_id.rateprice):0),
             
           });
         }
@@ -1037,15 +1079,15 @@ module.exports.reportsaleall = async (req,res)=>{
     
         if (quarterlyProfitIndex !== -1) {
           // ถ้ามีข้อมูลรายไตรมาสแล้ว
-          ReportProfits[monthlyProfitIndex].totalall += calculatorrate(item.alltotal, item.rateprice);
-          ReportProfits[monthlyProfitIndex].commission += calculatorrate(item.alltotal*item.commissionpercent,item.rateprice);
+          ReportProfits[monthlyProfitIndex].totalall += (item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0);
+          ReportProfits[monthlyProfitIndex].commission += (item.quotation_id != null? calculatorrate(item.quotation_id.alltotal*(item.commissionpercent/100),item.quotation_id.rateprice):0);
         } else {
           // ถ้ายังไม่มีข้อมูลรายไตรมาส
           ReportProfits.push({
             year: year,
             quarter: quarter,
-            totalall:calculatorrate(item.alltotal, item.rateprice),
-            commission: calculatorrate(item.alltotal*(item.commissionpercent/100),item.rateprice),
+            totalall:(item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0),
+            commission: (item.quotation_id != null? calculatorrate(item.quotation_id.alltotal*(item.commissionpercent/100),item.quotation_id.rateprice):0),
           });
         }
 
@@ -1060,14 +1102,14 @@ module.exports.reportsaleall = async (req,res)=>{
 
         if (yearlyProfitIndex !== -1) {
           // ถ้ามีข้อมูลรายปีแล้ว
-          ReportProfits[monthlyProfitIndex].totalall += calculatorrate(item.alltotal, item.rateprice);
-          ReportProfits[monthlyProfitIndex].commission += calculatorrate(item.alltotal*(item.commissionpercent/100),item.rateprice);
+          ReportProfits[monthlyProfitIndex].totalall += (item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0);
+          ReportProfits[monthlyProfitIndex].commission += (item.quotation_id != null? calculatorrate(item.quotation_id.alltotal*(item.commissionpercent/100),item.quotation_id.rateprice):0);
           } else {
           // ถ้ายังไม่มีข้อมูลรายปี
           ReportProfits.push({
             year: year,
-            totalall:calculatorrate(item.alltotal, item.rateprice),
-            commission: calculatorrate(item.alltotal*(item.commissionpercent/100),item.rateprice),
+            totalall:(item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0),
+            commission: (item.quotation_id != null? calculatorrate(item.quotation_id.alltotal*(item.commissionpercent/100),item.quotation_id.rateprice):0),
           });
     }
       }
@@ -1076,30 +1118,30 @@ module.exports.reportsaleall = async (req,res)=>{
     //ยอดขาย sale
     const salequotation = [];
     currentdata.forEach((items)=>{
-      const find = salequotation.findIndex((item) => JSON.parse(JSON.stringify(item.user_id?._id)) == JSON.parse(JSON.stringify(items.user_id?._id)));
+      const find = salequotation.findIndex((item) => JSON.parse(JSON.stringify(item.sale_id?._id)) == JSON.parse(JSON.stringify(items.sale_id?._id)));
       if (find !== -1) {
         salequotation[find].count += 1;
-        salequotation[find].totalAmount += calculatorrate(items.alltotal, items.rateprice);
-        salequotation[find].commission += calculatorrate(items.alltotal*(items.commissionpercent/100),items.rateprice);;
+        salequotation[find].totalAmount += (items.quotation_id != null? calculatorrate(items.quotation_id.alltotal, items.quotation_id.rateprice):0);
+        salequotation[find].commission += (items.quotation_id != null?calculatorrate(items.quotation_id.alltotal*(items.commissionpercent/100),items.quotation_id.rateprice):0);
       } else {
         
         salequotation.push({
-          user_id: items.user_id?._id,
-          firstname: items.user_id?.firstname,
-          lastname:items.user_id?.lastname,
-          nickname:items.user_id?.nickname,
+          sale_id: items.sale_id?._id,
+          firstname: items.sale_id?.firstname,
+          lastname:items.sale_id?.lastname,
+          nickname:items.sale_id?.nickname,
           count: 1,
-          totalAmount: calculatorrate(items.alltotal,items.rateprice),
-          commission:calculatorrate(items.alltotal*(items.commissionpercent/100),items.rateprice),
+          totalAmount:  (items.quotation_id != null? calculatorrate(items.quotation_id.alltotal, items.quotation_id.rateprice):0),
+          commission:(items.quotation_id != null?calculatorrate(items.quotation_id.alltotal*(items.commissionpercent/100),items.quotation_id.rateprice):0),
         });
       }
 
     })
     // คำนวณยอดขายทั้งหมด
-    const totalSales = currentdata.reduce((sum, item) => sum + calculatorrate(item.alltotal, item.rateprice), 0);
+    const totalSales = currentdata.reduce((sum, item) => sum + (item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0), 0);
     
     // 
-    const totalcommission = currentdata.reduce((sum, item) => sum + calculatorrate(item?.alltotal*(item?.commissionpercent/100),item?.rateprice), 0);
+    const totalcommission = currentdata.reduce((sum, item) => sum + (item.quotation_id != null ? calculatorrate(item?.quotation_id.alltotal*(item?.commissionpercent/100),item?.quotation_id.rateprice):0), 0);
     const dashboard = {
       totalSales:totalSales,
       totalProfit:totalcommission,
@@ -1112,29 +1154,30 @@ module.exports.reportsaleall = async (req,res)=>{
   }
 }
 
+// เสร็จแล้ว
 module.exports.dashboardadmin = async (req,res)=>{
   try{
     const id = req.body.id
-    const quotationdata = await Quotation.find().populate("user_id").populate("customer_id");
+    const orderdata = await Order.find().populate("quotation_id").populate("sale_id").populate("customer_id");
     let currentdata = ''
     let header = ''
     if(id =="month")
       {
         const currentMonth = new Date().getMonth() + 1;
         const currentYear = new Date().getFullYear();
-        currentdata = quotationdata.filter(items => new Date(items.createdAt).getMonth() + 1 == currentMonth && new Date(items.createdAt).getFullYear() == currentYear);
+        currentdata = orderdata.filter(items => new Date(items.createdAt).getMonth() + 1 == currentMonth && new Date(items.createdAt).getFullYear() == currentYear);
         header = convertToThaiMonth(currentMonth)+" "+currentYear;
       }
     else if (id === "quarter") {
       // กรณีเลือก "quarter"
       const currentQuarter = getQuarter(new Date());
-      currentdata = quotationdata.filter(items => getQuarter(new Date(items.createdAt)) === currentQuarter);
+      currentdata = orderdata.filter(items => getQuarter(new Date(items.createdAt)) === currentQuarter);
       header = `ไตรมาสที่ ${currentQuarter}  ปี ${new Date().getFullYear()}`;
     }
     else if (id === "year") {
       // กรณีเลือก "year"
       const currentYear = new Date().getFullYear();
-      currentdata = quotationdata.filter(items => new Date(items.createdAt).getFullYear() == currentYear);
+      currentdata = orderdata.filter(items => new Date(items.createdAt).getFullYear() == currentYear);
       header = `ปี ${currentYear}`;
     }
     else if(id =="other"){
@@ -1142,7 +1185,7 @@ module.exports.dashboardadmin = async (req,res)=>{
       if(date.length ==2){
         const startDate = new Date(date[0]);
         const endDate = new Date(date[1]);
-        currentdata = quotationdata.filter((item) => {
+        currentdata = orderdata.filter((item) => {
           const itemDate = new Date(item.createdAt);
           return itemDate >= startDate && itemDate <= endDate;
         });
@@ -1161,29 +1204,30 @@ module.exports.dashboardadmin = async (req,res)=>{
       }
     }
     else{
-      currentdata= quotationdata
+      currentdata= orderdata
       header= "ทั้งหมด"
     }
-    
+   
      // ยอดรวมใบเสนอราคาในเดือนปัจจุบัน
-     const totalquotation = currentdata.length;
+     const totalquotation = currentdata?.length;
+    
      // ยอดรวมงานที่ผ่านในเดือนปัจจุบัน
-     const passedJobs = currentdata.filter(item => item.statusdealdetail[item.statusdealdetail.length - 1]?.status === "ดีลงานผ่าน").length;
+     const passedJobs = currentdata?.filter(item => item?.dealstatus == true)?.length;
      // ยอดรวมงานที่ไม่ผ่านในเดือนปัจจุบัน
-     const notPassedJobs = currentdata.filter(item => item.statusdealdetail[item.statusdealdetail.length - 1]?.status === "ดีลงานไม่ผ่าน").length;
-
+     const notPassedJobs =currentdata?.filter(item => item?.dealstatus != true)?.length;
       /////     
-     currentdata = currentdata.filter(items => items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน");
-     
-     
+     currentdata = currentdata?.filter(item => item?.dealstatus == true)
+
+   
      
      // คำนวณยอดขายทั้งหมด
-      const totalSales = currentdata.reduce((sum, item) => sum + calculatorrate(item.alltotal, item.rateprice), 0);
-      const totalcommission = currentdata.reduce((sum, item) => sum + calculatorrate(item?.alltotal*(item?.commissionpercent/100),item?.rateprice), 0);
+      const totalSales = currentdata?.reduce((sum, item) => sum + calculatorrate(item.quotation_id?.alltotal, item.quotation_id?.rateprice), 0);
+      const totalcommission = currentdata?.reduce((sum, item) => sum + calculatorrate(item.quotation_id?.alltotal*(item?.commissionpercent/100),item?.quotation_id?.rateprice), 0);
 
+   
       // คำนวณกำไรทั้งหมด
-      const totalProfit = currentdata.reduce((sum, item) => sum + calculatorrate(item.totalprofit, item.rateprice), 0);
-
+      const totalProfit = currentdata?.reduce((sum, item) => sum + calculatorrate(item.quotation_id?.totalprofit, item.quotation_id?.rateprice), 0);
+     
       // คำนวณเฉลี่ยกำไร
       const averageProfitPercentage = (totalProfit / totalSales) * 100;
       const dashboard ={
@@ -1200,11 +1244,12 @@ module.exports.dashboardadmin = async (req,res)=>{
         totalProfit:totalProfit,
         averageProfitPercentage:averageProfitPercentage
      }
+     
      //////////////////////////
      
      const ReportProfits = [];
-     const dataprofits = quotationdata.filter(items => items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน");
-     dataprofits.forEach((item)=>{
+     const dataprofits = orderdata.filter(items => items?.dealstatus == true);
+    dataprofits.forEach((item)=>{
      if(id == "month"){
        const createdAt = new Date(item.createdAt);
        const year = createdAt.getFullYear();
@@ -1217,8 +1262,8 @@ module.exports.dashboardadmin = async (req,res)=>{
      
        if (monthlyProfitIndex !== -1) {
          // ถ้ามีข้อมูลรายเดือนแล้ว
-         ReportProfits[monthlyProfitIndex].totalall += calculatorrate(item.alltotal, item.rateprice);
-         ReportProfits[monthlyProfitIndex].totalProfit += calculatorrate(item.totalprofit, item.rateprice);
+         ReportProfits[monthlyProfitIndex].totalall += calculatorrate(item?.quotation_id?.alltotal, item?.quotation_id?.rateprice);
+         ReportProfits[monthlyProfitIndex].totalProfit += calculatorrate(item?.quotation_id?.totalprofit, item?.quotation_id?.rateprice);
        
          ReportProfits[monthlyProfitIndex].jobCount += 1;
        } else {
@@ -1226,8 +1271,8 @@ module.exports.dashboardadmin = async (req,res)=>{
          ReportProfits.push({
            year: year,
            month: month,
-           totalall:calculatorrate(item.alltotal, item.rateprice),
-           totalProfit: calculatorrate(item.totalprofit, item.rateprice),
+           totalall:calculatorrate(item?.quotation_id?.alltotal, item?.quotation_id?.rateprice),
+           totalProfit: (item.quotation_id != null ? calculatorrate(item.quotation_id.totalprofit, item.quotation_id.rateprice):0),
            jobCount: 1,
          });
        }
@@ -1244,16 +1289,16 @@ module.exports.dashboardadmin = async (req,res)=>{
    
        if (quarterlyProfitIndex !== -1) {
          // ถ้ามีข้อมูลรายไตรมาสแล้ว
-         ReportProfits[quarterlyProfitIndex].totalall += calculatorrate(item.alltotal, item.rateprice)
-         ReportProfits[quarterlyProfitIndex].totalProfit += calculatorrate(item.totalprofit, item.rateprice);
+         ReportProfits[quarterlyProfitIndex].totalall += calculatorrate(item?.quotation_id?.alltotal, item?.quotation_id?.rateprice)
+         ReportProfits[quarterlyProfitIndex].totalProfit += calculatorrate(item?.quotation_id?.totalprofit, item?.quotation_id?.rateprice);
          ReportProfits[quarterlyProfitIndex].jobCount += 1;
        } else {
          // ถ้ายังไม่มีข้อมูลรายไตรมาส
          ReportProfits.push({
            year: year,
            quarter: quarter,
-           totalall:calculatorrate(item.alltotal, item.rateprice),
-           totalProfit: calculatorrate(item.totalprofit, item.rateprice),
+           totalall:calculatorrate(item?.quotation_id?.alltotal, item?.quotation_id?.rateprice),
+           totalProfit: calculatorrate(item?.quotation_id?.totalprofit,item?.quotation_id?.rateprice),
            jobCount: 1,
          });
        }
@@ -1269,15 +1314,15 @@ module.exports.dashboardadmin = async (req,res)=>{
 
        if (yearlyProfitIndex !== -1) {
          // ถ้ามีข้อมูลรายปีแล้ว
-         ReportProfits[yearlyProfitIndex].totalall +=  calculatorrate(item.alltotal, item.rateprice);
-         ReportProfits[yearlyProfitIndex].totalProfit += calculatorrate(item.totalprofit, item.rateprice);
+         ReportProfits[yearlyProfitIndex].totalall +=  calculatorrate(item?.quotation_id?.alltotal, item?.quotation_id?.rateprice);
+         ReportProfits[yearlyProfitIndex].totalProfit += calculatorrate(item?.quotation_id?.totalprofit, item?.quotation_id?.rateprice);
          ReportProfits[yearlyProfitIndex].jobCount += 1;
          } else {
          // ถ้ายังไม่มีข้อมูลรายปี
          ReportProfits.push({
            year: year,
-           totalall:calculatorrate(item.alltotal, item.rateprice),
-           totalProfit: calculatorrate(item.totalprofit, item.rateprice),
+           totalall:calculatorrate(item?.quotation_id?.alltotal, item?.quotation_id?.rateprice),
+           totalProfit: calculatorrate(item?.quotation_id?.totalprofit, item?.quotation_id?.rateprice),
            jobCount: 1,
          });
    }
@@ -1287,21 +1332,21 @@ module.exports.dashboardadmin = async (req,res)=>{
     //ยอดขาย sale
     const salequotation = [];
     currentdata.forEach((items)=>{
-      const find = salequotation.findIndex((item) => JSON.parse(JSON.stringify(item.user_id?._id)) == JSON.parse(JSON.stringify(items.user_id?._id)));
+      const find = salequotation.findIndex((item) => JSON.parse(JSON.stringify(item.sale_id?._id)) == JSON.parse(JSON.stringify(items.sale_id?._id)));
       if (find !== -1) {
         salequotation[find].count += 1;
-        salequotation[find].totalAmount += calculatorrate(items.alltotal, items.rateprice);
-        salequotation[find].commission += calculatorrate(items.alltotal*(items.commissionpercent/100),items.rateprice);;
+        salequotation[find].totalAmount += calculatorrate(items.quotation_id.alltotal, items.quotation_id.rateprice);
+        salequotation[find].commission += calculatorrate(items.quotation_id.alltotal*(items.commissionpercent/100),items.quotation_id.rateprice);;
       } else {
         
         salequotation.push({
-          user_id: items.user_id?._id,
-          firstname: items.user_id?.firstname,
-          lastname:items.user_id?.lastname,
-          nickname:items.user_id?.nickname,
+          sale_id: items.sale_id?._id,
+          firstname: items.sale_id?.firstname,
+          lastname:items.sale_id?.lastname,
+          nickname:items.sale_id?.nickname,
           count: 1,
-          totalAmount: calculatorrate(items.alltotal,items.rateprice),
-          commission:calculatorrate(items.alltotal*(items.commissionpercent/100),items.rateprice),
+          totalAmount: calculatorrate(items.quotation_id.alltotal,items.quotation_id.rateprice),
+          commission:calculatorrate(items.quotation_id.alltotal*(items.commissionpercent/100),items.quotation_id.rateprice),
         });
       }
 
@@ -1316,28 +1361,28 @@ module.exports.dashboardadmin = async (req,res)=>{
 module.exports.dashboardsale = async (req,res)=>{
   try{
       const id = req.body.id;
-      const user_id = req.body.user_id;
-      const user = await User.findById(user_id);
-      const quotationdata = await Quotation.find({user_id:user_id});
+      const sale_id = req.body.user_id;
+      const user = await User.findById(sale_id);
+      const orderdata = await Order.find({sale_id:sale_id}).populate("quotation_id").populate("sale_id").populate("customer_id");;
       let header = ''
       let currentdata = ''
       if(id =="month")
       {
         const currentMonth = new Date().getMonth() + 1;
         const currentYear = new Date().getFullYear();
-        currentdata = quotationdata.filter(items => new Date(items.createdAt).getMonth() + 1 == currentMonth && new Date(items.createdAt).getFullYear() == currentYear);
+        currentdata = orderdata.filter(items => new Date(items.createdAt).getMonth() + 1 == currentMonth && new Date(items.createdAt).getFullYear() == currentYear);
         header = convertToThaiMonth(currentMonth)+" "+currentYear;
       }
       else if (id === "quarter") {
       // กรณีเลือก "quarter"
       const currentQuarter = getQuarter(new Date());
-      currentdata = quotationdata.filter(items => getQuarter(new Date(items.createdAt)) === currentQuarter);
+      currentdata = orderdata.filter(items => getQuarter(new Date(items.createdAt)) === currentQuarter);
       header = `ไตรมาสที่ ${currentQuarter}  ปี ${new Date().getFullYear()}`;
       }
       else if (id === "year") {
       // กรณีเลือก "year"
       const currentYear = new Date().getFullYear();
-      currentdata = quotationdata.filter(items => new Date(items.createdAt).getFullYear() == currentYear);
+      currentdata = orderdata.filter(items => new Date(items.createdAt).getFullYear() == currentYear);
       header = `ปี ${currentYear}`;
       }
       else if(id =="other"){
@@ -1345,7 +1390,7 @@ module.exports.dashboardsale = async (req,res)=>{
       if(date.length ==2){
         const startDate = new Date(date[0]);
         const endDate = new Date(date[1]);
-        currentdata = quotationdata.filter((item) => {
+        currentdata = orderdata.filter((item) => {
           const itemDate = new Date(item.createdAt);
           return itemDate >= startDate && itemDate <= endDate;
         });
@@ -1364,16 +1409,21 @@ module.exports.dashboardsale = async (req,res)=>{
       }
       }
       else{
-      currentdata= quotationdata
+      currentdata= orderdata
       header= "ทั้งหมด"
       }
-      const passdata = currentdata.filter((item)=>item?.statusdealdetail[item.statusdealdetail.length - 1]?.status === "ดีลงานผ่าน")
-      const totalSales = passdata.reduce((sum, item) => sum + calculatorrate(item.alltotal, item.rateprice), 0);
-      const totalcommission = passdata.reduce((sum, item) => sum + calculatorrate(item?.alltotal*(item?.commissionpercent/100),item?.rateprice), 0);
-
+     
+      const passdata = currentdata.filter((item)=>item?.dealstatus == true)
+      
+      const totalSales = passdata.reduce((sum, item) => sum + (item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0), 0);
+      const totalcommission = passdata.reduce((sum, item) => sum + (item.quotation_id != null ? calculatorrate(item?.quotation_id.alltotal*(item?.commissionpercent/100),item?.quotation_id.rateprice):0), 0);
+   
+      
+      
       const pricequotation = currentdata.length
-      const passedJobs = currentdata.filter(item => item.statusdealdetail[item.statusdealdetail.length - 1]?.status === "ดีลงานผ่าน").length;
-      const notPassedJobs = currentdata.filter(item => item.statusdealdetail[item.statusdealdetail.length - 1]?.status === "ดีลงานไม่ผ่าน").length;
+      const passedJobs = currentdata.filter(item => item.dealstatus == true).length;
+      const notPassedJobs = currentdata.filter(item => item.dealstatus == false).length;
+      
       const dashboard ={
         totalSales:totalSales,
         totalcommission:totalcommission,
@@ -1381,8 +1431,9 @@ module.exports.dashboardsale = async (req,res)=>{
         passedJobs:passedJobs,
         notPassedJobs:notPassedJobs
       }
+      
       const ReportProfits = [];
-     const dataprofits = quotationdata.filter(items => items.statusdealdetail[items.statusdealdetail?.length - 1]?.status === "ดีลงานผ่าน");
+      const dataprofits = orderdata.filter(items => items.dealstatus == true);      
       dataprofits.forEach((item)=>{
      if(id == "month"){
        const createdAt = new Date(item.createdAt);
@@ -1396,8 +1447,8 @@ module.exports.dashboardsale = async (req,res)=>{
      
        if (monthlyProfitIndex !== -1) {
          // ถ้ามีข้อมูลรายเดือนแล้ว
-         ReportProfits[monthlyProfitIndex].totalall += calculatorrate(item.alltotal, item.rateprice);
-         ReportProfits[monthlyProfitIndex].totalProfit += calculatorrate(item?.alltotal*(item?.commissionpercent/100),item?.rateprice);
+         ReportProfits[monthlyProfitIndex].totalall += (item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0);
+         ReportProfits[monthlyProfitIndex].totalProfit += (item.quotation_id != null ? calculatorrate(item?.quotation_id.alltotal*(item?.commissionpercent/100),item?.quotation_id.rateprice):0);
        
          ReportProfits[monthlyProfitIndex].jobCount += 1;
        } else {
@@ -1405,8 +1456,8 @@ module.exports.dashboardsale = async (req,res)=>{
          ReportProfits.push({
            year: year,
            month: month,
-           totalall:calculatorrate(item.alltotal, item.rateprice),
-           totalProfit: calculatorrate(item?.alltotal*(item?.commissionpercent/100),item?.rateprice),
+           totalall:(item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0),
+           totalProfit: (item.quotation_id != null ? calculatorrate(item?.quotation_id.alltotal*(item?.commissionpercent/100),item?.quotation_id.rateprice):0),
            jobCount: 1,
          });
        }
@@ -1423,16 +1474,16 @@ module.exports.dashboardsale = async (req,res)=>{
    
        if (quarterlyProfitIndex !== -1) {
          // ถ้ามีข้อมูลรายไตรมาสแล้ว
-         ReportProfits[quarterlyProfitIndex].totalall += calculatorrate(item.alltotal, item.rateprice)
-         ReportProfits[quarterlyProfitIndex].totalProfit += calculatorrate(item?.alltotal*(item?.commissionpercent/100),item?.rateprice);
+         ReportProfits[quarterlyProfitIndex].totalall += (item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0)
+         ReportProfits[quarterlyProfitIndex].totalProfit += (item.quotation_id != null ? calculatorrate(item?.quotation_id.alltotal*(item?.commissionpercent/100),item?.quotation_id.rateprice):0);
          ReportProfits[quarterlyProfitIndex].jobCount += 1;
        } else {
          // ถ้ายังไม่มีข้อมูลรายไตรมาส
          ReportProfits.push({
            year: year,
            quarter: quarter,
-           totalall:calculatorrate(item.alltotal, item.rateprice),
-           totalProfit: calculatorrate(item?.alltotal*(item?.commissionpercent/100),item?.rateprice),
+           totalall:(item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0),
+           totalProfit:(item.quotation_id != null ? calculatorrate(item?.quotation_id.alltotal*(item?.commissionpercent/100),item?.quotation_id.rateprice):0),
            jobCount: 1,
          });
        }
@@ -1448,15 +1499,15 @@ module.exports.dashboardsale = async (req,res)=>{
 
        if (yearlyProfitIndex !== -1) {
          // ถ้ามีข้อมูลรายปีแล้ว
-         ReportProfits[yearlyProfitIndex].totalall +=  calculatorrate(item.alltotal, item.rateprice);
-         ReportProfits[yearlyProfitIndex].totalProfit += calculatorrate(item?.alltotal*(item?.commissionpercent/100),item?.rateprice);
+         ReportProfits[yearlyProfitIndex].totalall +=  (item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0);
+         ReportProfits[yearlyProfitIndex].totalProfit += (item.quotation_id != null ? calculatorrate(item?.quotation_id.alltotal*(item?.commissionpercent/100),item?.quotation_id.rateprice):0);
          ReportProfits[yearlyProfitIndex].jobCount += 1;
          } else {
          // ถ้ายังไม่มีข้อมูลรายปี
          ReportProfits.push({
            year: year,
-           totalall:calculatorrate(item.alltotal, item.rateprice),
-           totalProfit: calculatorrate(item?.alltotal*(item?.commissionpercent/100),item?.rateprice),
+           totalall:(item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0),
+           totalProfit: (item.quotation_id != null ? calculatorrate(item?.quotation_id.alltotal*(item?.commissionpercent/100),item?.quotation_id.rateprice):0),
            jobCount: 1,
          });
    }

@@ -1,51 +1,44 @@
 const mongoose = require("mongoose");
 
+
 // Define the schema for the HotelUser entity
 const orderSchema = new mongoose.Schema(
-  { 
-    refno:{type:String,default:""}, //(เลขที่เอกสาร)
-    customer_id:{type: mongoose.Schema.Types.ObjectId,ref:'customer',required:true} ,//(รหัสลูกค้า)
-    sale_id:{type: mongoose.Schema.Types.ObjectId,ref:'user',required:true},//(รหัสSales Department )
-    procurement_id:{type: mongoose.Schema.Types.ObjectId,ref:'user',default:null}, //(รหัส procurement)
-    quotation_id:{type: mongoose.Schema.Types.ObjectId,ref:'quotation',required:true}, //รหัสใบเสนอราคา
-    purchaseorder:{type:[{purchaseorder_id:{type: mongoose.Schema.Types.ObjectId,ref:'purchaseorder'}}]},
-    date :{type:Date,default:Date.now()}, //(วันที่ลงเอกสาร) 
-    productdetail:{type:[{
-        status:{type:Boolean,default:false},
-        product_id :{type: mongoose.Schema.Types.ObjectId,ref:'product'}, //(ข้อมูลสินค้า)
-        product_name:{type:String}, // (ชื่อสินค้า)
-        brand: {type: mongoose.Schema.Types.ObjectId,ref:'brand'},
-        image:{type:String},
-        quantity:{type:Number},//(จำนวน)
-        price :{type:Number},
-        rate: {type:mongoose.Schema.Types.ObjectId,ref:'rate'},
-        rate_name: {type:String},
-        rate_rateprice: {type:Number},
-        rate_symbol: {type:String},
-        supplier_id:{type: mongoose.Schema.Types.ObjectId,ref:'supplier'},
-	    total:{type:Number} //(ราคารวมในสินค้า)
+  {
+    reforder:{type:String,default:""},
+    customer_id:{type: mongoose.Schema.Types.ObjectId,ref:'customer',default:null},
+    contact_id:{type: mongoose.Schema.Types.ObjectId,ref:'contactcustomer',default:null},
+    sale_id :{type: mongoose.Schema.Types.ObjectId,ref:'user',default:null},
+    requested_products :{type:[{
+      product_name:{type:String,default:""},
     }],default:null},
-    ////
-    rate:{type: mongoose.Schema.Types.ObjectId,ref:'rate',default:null},
-    ratename:{type:String,default:""},
-    rateprice:{type:Number,default:0},
-    ratesymbol: {type:String,default:""},
-    ////
-    total:{type:Number,default:0}, //(ราคารวมสินค้า)
-    profitpercent:{type:Number,default:0}, // ค่าเปอร์เซ็นต์ดำเนินการ
-    profit:{type:Number,default:0}, // ค่าดำเนินการ
-    priceprofit:{type:Number,default:0}, // ราคา+กำไร
-    discount: {type:Number,default:0},
-    tax:{type:Number,default:0}, //(หักภาษี 7 %)
-    alltotal:{type:Number,default:0}, //(ราคารวมทั้งหมด)
-    status:{type:String,default:"รอเปิดใบสั่งซื้อ"},
-    statusdetail:{type:[{
-        status:{type:String},
-        date:{type:Date,default:Date.now()}
-    }],default:null},
-    file:{type:String,default:""}
+    quotation_id: {type: mongoose.Schema.Types.ObjectId,ref:'quotation',default:null},
+    status:{type:String,default:""},
+    //ส่วนการดีลงาน
+    dealstatus:{type:Boolean,default:null}, // สถานะการดีล
+    dealremark:{type:String,default:""},
+    file:{type:String,default:""},
+    //ค่าคอมมิสชั่น
+    commissionpercent:{type:Number,default:0},
+    //วันจะที่จบดีลวันที่ผ่าน  
+    dealenddate:{type:Date,default:null},
+    //วันที่ต้องส่งของให้กับลูกค้า
+    deliverydate:{type:Date,default:null},
+    //ส่วนของ po
+    procurement_id:{type: mongoose.Schema.Types.ObjectId,ref:'user',default:null},
+    purchaseorder:{type:[
+      {
+        _id:{type: mongoose.Schema.Types.ObjectId,ref:'purchaseorder',default:null},
+        refpurchaseorder:{type:String,default:""},
+      }
+    ],default:null},
+    //ส่วนของการจัดส่ง
+    deliverystatus:{type:Boolean,default:false},
+    //ส่วนของการจัดส่งให้กับลูกค้าไปแล้ว
+    date_delivery:{type:Date,default:null},
+    date_customer_delivery:{type:Date,default:null},
+    deliverycustomerstatus:{type:Boolean,default:false},
   },
-  {timestamps: true}
+  {timestamps: true} 
 );
 
 const Order = mongoose.model("order", orderSchema);

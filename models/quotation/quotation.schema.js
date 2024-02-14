@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const quotationSchema = new mongoose.Schema(
   { 
     customer_id:{type: mongoose.Schema.Types.ObjectId,ref:'customer',required:true} ,//(ชื่อลูกค้า)
+    order_id:{type: mongoose.Schema.Types.ObjectId,ref:'order',default:null}, //(รหัสใบสั่งซื้อ)
     user_id:{type: mongoose.Schema.Types.ObjectId,ref:'user',required:true},//(รหัสSales Department )
     refno:{type:String,default:""}, //(เลขที่เอกสาร)
     date :{type:Date,default:Date.now()}, //(วันที่ลงเอกสาร)
@@ -47,15 +48,6 @@ const quotationSchema = new mongoose.Schema(
     //
     tax:{type:Number,default:0}, //(หักภาษี 7 %)
     alltotal:{type:Number,default:0}, //(ราคารวมทั้งหมด)
-    //ส่วนการดีลงาน
-    statusdeal:{type:Boolean,default:false},
-    statusdealdetail:{type:[{
-      status:{type:String},
-      date:{type:Date,default:Date.now()},
-    }],default:null},
-    dealremark:{type:String,default:""},
-    file:{type:String,default:""},
-
     //ส่วนเพิ่มใหม่
     project: {type:String,default:""},
     discount:{type:Number}, //เพิ่มเข้ามาใหม่
@@ -64,9 +56,11 @@ const quotationSchema = new mongoose.Schema(
     timeofdelivery: {type:String,default:""} ,//กำหนดส่งของ
     paymentterm :{type:String,default:""}, //เงื่อนไขการชำระเงิน
     remark:{type:String,default:""},
+    //ส่วนเพิ่มใหม่
+    importtax:{type:Number,default:0}, //(ภาษีนำเข้า)
+    shippingcost:{type:Number,default:0}, //(ค่าขนส่ง)
     priceprofit:{type:Number,default:0},
-    //ค่าคอมมิสชั่น
-    commissionpercent:{type:Number,default:0},
+    
   },
   {timestamps: true}
 );

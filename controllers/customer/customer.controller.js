@@ -4,6 +4,11 @@ const Customer = require("../../models/customer/customer.schema");
 module.exports.add = async (req, res) => {
   try {
     const {name,typebussinecustomer,typelndustry,capitalvalue,address,country,website,remark,email,contact,telephone,taxcustomerid} = req.body
+    const checktaxid = await Customer.findOne({taxcustomerid:taxcustomerid})
+    // ถ้าหาเจอ ให้ res
+    if (checktaxid) {
+      return res.status(409).send({ status: false, message: "เลขประจำตัวผู้เสียภาษีซ้ำๆกัน กรุณากรอกใหม่" });
+    }
     const data = new Customer({
       name:name, //(ชื่อบริษัท หรือ ชื่อลูกค้า)
       typebussinecustomer:typebussinecustomer,
@@ -62,6 +67,15 @@ module.exports.edit = async (req, res) => {
         return res.status(404).send({ status: false, message: "ไม่มีข้อมูลลูกค้า" });
     }
     const {name,typebussinecustomer,typelndustry,capitalvalue,address,country,website,remark,email,contact,telephone,taxcustomerid} = req.body
+    if(customerdata.taxcustomerid !=taxcustomerid)
+    {
+      const checktaxid = await Customer.findOne({taxcustomerid:taxcustomerid})
+      // ถ้าหาเจอ ให้ res
+      if (checktaxid) {
+        return res.status(409).send({ status: false, message: "เลขประจำตัวผู้เสียภาษีซ้ำๆกัน กรุณากรอกใหม่" });
+      }
+    }  
+
     const data = {
       name:name, //(ชื่อบริษัท หรือ ชื่อลูกค้า)
       typebussinecustomer:typebussinecustomer,

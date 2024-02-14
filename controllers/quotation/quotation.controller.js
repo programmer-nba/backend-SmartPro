@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
 module.exports.add = async (req, res) => {
   try {
     const {customer_id,user_id,productdetail,total,tax,alltotal,rate,ratename,rateprice,ratesymbol,profitpercent,profit
-      ,project,totalprofit,discount,warranty,timeofdelivery,paymentterm,remark,priceprofit} = req.body
+      ,project,totalprofit,discount,warranty,timeofdelivery,paymentterm,remark,priceprofit,order_id,importtax,shippingcost} = req.body
     const startDate = new Date();
     // สร้างวันที่ของวันถัดไป
     const endDate = new Date();
@@ -40,6 +40,7 @@ module.exports.add = async (req, res) => {
     
     const data = new Quotation({
         customer_id:customer_id,
+        order_id:order_id,
         user_id:user_id,
         refno:refno ,
         date:Date.now(),
@@ -66,10 +67,17 @@ module.exports.add = async (req, res) => {
         timeofdelivery: timeofdelivery ,//กำหนดส่งของ
         paymentterm :paymentterm, //เงื่อนไขการชำระเงิน
         remark:remark,
+        importtax:importtax,
+        shippingcost:shippingcost
         
       });
 
       const add = await data.save();
+      const order = await Order.find({_id: add.order_id})
+      if(order.length > 0){
+        const editorder = await Order.findByIdAndUpdate(add.order_id,{status:"สร้างใบเสนอราคาแล้ว",quotation_id:add._id},{new:true})
+      }
+
       return res.status(200).send({status: true,message:"คุณได้เพิ่มข้อมูลใบเสนอราคา",data: add});
   } catch (error) {
     return res.status(500).send({ status: false, error: error.message });
@@ -128,7 +136,7 @@ module.exports.edit = async (req, res) => {
         return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
     }
     const {productdetail,total,tax,alltotal,rate,ratename
-      ,rateprice,ratesymbol,profitpercent,profit,project,totalprofit,discount,warranty,timeofdelivery,paymentterm,remark,priceprofit} = req.body
+      ,rateprice,ratesymbol,profitpercent,profit,project,totalprofit,discount,warranty,timeofdelivery,paymentterm,remark,priceprofit,importtax,shippingcost} = req.body
     const data = {
         productdetail:productdetail,
         total:total, //(ราคารวมสินค้า)
@@ -147,7 +155,9 @@ module.exports.edit = async (req, res) => {
         timeofdelivery: timeofdelivery ,//กำหนดส่งของ
         paymentterm :paymentterm, //เงื่อนไขการชำระเงิน
         remark:remark,
-        priceprofit:priceprofit
+        priceprofit:priceprofit,
+        importtax:importtax,
+        shippingcost:shippingcost
     }
     console.log(priceprofit)
     const edit = await Quotation.findByIdAndUpdate(id,data,{new:true})
@@ -185,15 +195,15 @@ module.exports.accept = async (req, res) => {
       
       const data ={
         status:true,
-        statusdetail:quotationdata.statusdetail,
-        statusdealdetail:[{
-          status:"อยู่ระหว่างการดีลงานกับลูกค้า",
-          date: Date.now(),
-        }],
-       
+        statusdetail:quotationdata.statusdetail,       
       }
-     
       const edit = await Quotation.findByIdAndUpdate(id,data,{new:true})
+      //เปลี่ยนสถานะใบสั่งซื้อเป็น  ยืนยันใบเสนอราคาแล้ว
+      const order = await Order.find({quotation_id:id});
+      if(order.length > 0){
+        const editorder = await Order.findByIdAndUpdate(order[0]._id,{status:"ยืนยันใบเสนอราคาแล้ว"},{new:true})
+      }
+      
       return res.status(200).send({status: true,message: "ใบเสนอราคาได้รับการอนุมัติแล้ว",data: edit});
     } catch (error) {
       return res.status(500).send({ status: false, error: error.message });
@@ -215,131 +225,131 @@ module.exports.getaccept = async (req, res) => {
   }
 };
 
-//ผ่านงาน
-module.exports.acceptdeal = async (req, res) => {
-  try {
+// //ผ่านงาน
+// module.exports.acceptdeal = async (req, res) => {
+//   try {
 
-    let upload = multer({ storage: storage }).array("filedata", 20);
-    upload(req, res, async function (err) {
-      const reqFiles = [];
-      const result = [];
-      if (err) {
-        return res.status(500).send(err);
-      }
-      let file = '' // ตั้งตัวแปรรูป
-      //ถ้ามีรูปให้ทำฟังก์ชั่นนี้ก่อน
-      if (req.files) {
-        const url = req.protocol + "://" + req.get("host");
-        for (var i = 0; i < req.files.length; i++) {
-          const src = await uploadFileCreate(req.files, res, { i, reqFiles });
-          result.push(src);
+//     let upload = multer({ storage: storage }).array("filedata", 20);
+//     upload(req, res, async function (err) {
+//       const reqFiles = [];
+//       const result = [];
+//       if (err) {
+//         return res.status(500).send(err);
+//       }
+//       let file = '' // ตั้งตัวแปรรูป
+//       //ถ้ามีรูปให้ทำฟังก์ชั่นนี้ก่อน
+//       if (req.files) {
+//         const url = req.protocol + "://" + req.get("host");
+//         for (var i = 0; i < req.files.length; i++) {
+//           const src = await uploadFileCreate(req.files, res, { i, reqFiles });
+//           result.push(src);
         
-          //   reqFiles.push(url + "/public/" + req.files[i].filename);
-        }
-        file = reqFiles[0]
-      }
+//           //   reqFiles.push(url + "/public/" + req.files[i].filename);
+//         }
+//         file = reqFiles[0]
+//       }
 
-    const id = req.params.id
-    const quotationdata = await Quotation.findOne({ _id: id });
-    if (!quotationdata) {
-      return res.status(200).send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
-    }
-    quotationdata.statusdealdetail.push({status:"ดีลงานผ่าน",date:Date.now()})
-    const {remake} = req.body
-    const commissionpercent = await Commission.find();
-    const data ={
-      statusdeal:true,
-      statusdealdetail:quotationdata.statusdealdetail,
-      dealremark:remake,
-      file:file,
-      commissionpercent:commissionpercent[0]?.percent
-    }
-    const edit = await Quotation.findByIdAndUpdate(id,data,{new:true})
-    ///
-    const startDate = new Date();
-    // สร้างวันที่ของวันถัดไป
-    const endDate = new Date();
-    endDate.setDate(endDate.getDate() + 1);
-    // ปรับเวลาให้เป็นเริ่มต้นของวัน
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(0, 0, 0, 0);
-    const orderprice = await Order.find({
-        createdAt: {
-          $gte: startDate,
-          $lt: endDate
-        }
-      });
-    const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const referenceNumber = String(orderprice.length).padStart(5, '0')
-    const refno = `ORDER${currentDate}${referenceNumber}`
+//     const id = req.params.id
+//     const quotationdata = await Quotation.findOne({ _id: id });
+//     if (!quotationdata) {
+//       return res.status(200).send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
+//     }
+//     quotationdata.statusdealdetail.push({status:"ดีลงานผ่าน",date:Date.now()})
+//     const {remake} = req.body
+//     const commissionpercent = await Commission.find();
+//     const data ={
+//       statusdeal:true,
+//       statusdealdetail:quotationdata.statusdealdetail,
+//       dealremark:remake,
+//       file:file,
+//       commissionpercent:commissionpercent[0]?.percent
+//     }
+//     const edit = await Quotation.findByIdAndUpdate(id,data,{new:true})
+//     ///
+//     const startDate = new Date();
+//     // สร้างวันที่ของวันถัดไป
+//     const endDate = new Date();
+//     endDate.setDate(endDate.getDate() + 1);
+//     // ปรับเวลาให้เป็นเริ่มต้นของวัน
+//     startDate.setHours(0, 0, 0, 0);
+//     endDate.setHours(0, 0, 0, 0);
+//     const orderprice = await Order.find({
+//         createdAt: {
+//           $gte: startDate,
+//           $lt: endDate
+//         }
+//       });
+//     const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+//     const referenceNumber = String(orderprice.length).padStart(5, '0')
+//     const refno = `ORDER${currentDate}${referenceNumber}`
 
-    const dataorder = new Order({
-      refno:refno, //(เลขที่เอกสาร)
-      customer_id:quotationdata.customer_id,//(รหัสลูกค้า)
-      sale_id:quotationdata.user_id,//(รหัสSales Department )
-      procurement_id:null, //(รหัส procurement)
-      quotation_id:quotationdata._id, //รหัสใบเสนอราคา
-      date :Date.now(), //(วันที่ลงเอกสาร) 
-      productdetail:quotationdata.productdetail,
-      rate:quotationdata.rate,
-      ratename:quotationdata.ratename,
-      rateprice:quotationdata.rateprice,
-      ratesymbol: quotationdata.ratesymbol,
-      total:quotationdata.total, //(ราคารวมสินค้า)
-      profitpercent:quotationdata.profitpercent, // ค่าเปอร์เซ็นต์ดำเนินการ
-      profit:quotationdata.profit, // ค่าดำเนินการ
-      priceprofit:quotationdata.priceprofit, // ราคา+กำไร
-      discount:quotationdata.discount,
-      tax:quotationdata.tax, //(หักภาษี 7 %)
-      alltotal:quotationdata.alltotal, //(ราคารวมทั้งหมด)
-      status:"รอเปิดใบสั่งซื้อ",
-      statusdetail:[{status:"รอเปิดใบสั่งซื้อ",date:Date.now()}],
-      file:file
-    })
-    const addorder = await dataorder.save();
-    return res.status(200).send({status: true,message: "ดีลงานผ่านแล้ว",data: edit,order:addorder});
-    });
+//     const dataorder = new Order({
+//       refno:refno, //(เลขที่เอกสาร)
+//       customer_id:quotationdata.customer_id,//(รหัสลูกค้า)
+//       sale_id:quotationdata.user_id,//(รหัสSales Department )
+//       procurement_id:null, //(รหัส procurement)
+//       quotation_id:quotationdata._id, //รหัสใบเสนอราคา
+//       date :Date.now(), //(วันที่ลงเอกสาร) 
+//       productdetail:quotationdata.productdetail,
+//       rate:quotationdata.rate,
+//       ratename:quotationdata.ratename,
+//       rateprice:quotationdata.rateprice,
+//       ratesymbol: quotationdata.ratesymbol,
+//       total:quotationdata.total, //(ราคารวมสินค้า)
+//       profitpercent:quotationdata.profitpercent, // ค่าเปอร์เซ็นต์ดำเนินการ
+//       profit:quotationdata.profit, // ค่าดำเนินการ
+//       priceprofit:quotationdata.priceprofit, // ราคา+กำไร
+//       discount:quotationdata.discount,
+//       tax:quotationdata.tax, //(หักภาษี 7 %)
+//       alltotal:quotationdata.alltotal, //(ราคารวมทั้งหมด)
+//       status:"รอเปิดใบสั่งซื้อ",
+//       statusdetail:[{status:"รอเปิดใบสั่งซื้อ",date:Date.now()}],
+//       file:file
+//     })
+//     const addorder = await dataorder.save();
+//     return res.status(200).send({status: true,message: "ดีลงานผ่านแล้ว",data: edit,order:addorder});
+//     });
     
-  } catch (error) {
-    return res.status(500).send({ status: false, error: error.message });
-  }
-};
+//   } catch (error) {
+//     return res.status(500).send({ status: false, error: error.message });
+//   }
+// };
 
-//ไม่ผ่านงาน
-module.exports.unacceptdeal = async (req, res) => {
-  try {
-    const id = req.params.id
-    const quotationdata = await Quotation.findOne({ _id: id });
-    if (!quotationdata) {
-      return res.status(200).send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
-    }
-    const {remake} = req.body
-    quotationdata.statusdealdetail.push({status:"ดีลงานไม่ผ่าน",date:Date.now()})
-    const data ={
-      statusdeal:false,
-      statusdealdetail:quotationdata.statusdealdetail,
-      dealremark:remake,
-    }
+// //ไม่ผ่านงาน
+// module.exports.unacceptdeal = async (req, res) => {
+//   try {
+//     const id = req.params.id
+//     const quotationdata = await Quotation.findOne({ _id: id });
+//     if (!quotationdata) {
+//       return res.status(200).send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
+//     }
+//     const {remake} = req.body
+//     quotationdata.statusdealdetail.push({status:"ดีลงานไม่ผ่าน",date:Date.now()})
+//     const data ={
+//       statusdeal:false,
+//       statusdealdetail:quotationdata.statusdealdetail,
+//       dealremark:remake,
+//     }
    
-    const edit = await Quotation.findByIdAndUpdate(id,data,{new:true})
-    return res.status(200).send({status: true,message: "ดีลงานไม่ผ่าน",data: edit});
-  } catch (error) {
-    return res.status(500).send({ status: false, error: error.message });
-  }
-};
+//     const edit = await Quotation.findByIdAndUpdate(id,data,{new:true})
+//     return res.status(200).send({status: true,message: "ดีลงานไม่ผ่าน",data: edit});
+//   } catch (error) {
+//     return res.status(500).send({ status: false, error: error.message });
+//   }
+// };
 
-//ดึงข้อมูลที่ผ่านการดีลงาน
-module.exports.getquotationtopo = async (req, res) => {
-  try {
-    const quotationdata = await Quotation.find({status:true,statusdeal:true})
-    .populate('customer_id')
-    .populate('user_id');
-    if (!quotationdata) {
-      return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
-    }
+// //ดึงข้อมูลท ี่ผ่านการดีลงาน
+// module.exports.getquotationtopo = async (req, res) => {
+//   try {
+//     const quotationdata = await Quotation.find({status:true,statusdeal:true})
+//     .populate('customer_id')
+//     .populate('user_id');
+//     if (!quotationdata) {
+//       return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
+//     }
 
-    return res.status(200).send({ status: true, data: quotationdata });
-  } catch (error) {
-    return res.status(500).send({ status: false, error: error.message });
-  }
-};
+//     return res.status(200).send({ status: true, data: quotationdata });
+//   } catch (error) {
+//     return res.status(500).send({ status: false, error: error.message });
+//   }
+// };

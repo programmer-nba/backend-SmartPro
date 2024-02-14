@@ -3,7 +3,13 @@ const Supplier = require("../../models/supplier/supplier.schema");
 //เพิ่ม supplier
 module.exports.add = async (req, res) => {
   try {
-    const {name,typeofbusiness,categoryofproducts,email,contact,telephone,address,country,remake,website} = req.body
+    const {name,typeofbusiness,categoryofproducts,email,contact,telephone,address,country,remake,website,taxid} = req.body
+    
+    const checktaxid = await Supplier.findOne({taxid:taxid})
+    // ถ้าหาเจอ ให้ res
+    if (checktaxid) {
+      return res.status(409).send({ status: false, message: "เลขประจำตัวผู้เสียภาษีซ้ำๆกัน กรุณากรอกใหม่" });
+    }
     const data = new Supplier({
       name:name,  //(ชื่อบริษัทของ supplier)
       typeofbusiness:typeofbusiness,
@@ -14,7 +20,9 @@ module.exports.add = async (req, res) => {
       email:email, // (อีเมล์)
       contact:contact, //(ผู้ติดต่อ)
       website:website, //(เว็บไซต์)
-      remake:remake
+      remake:remake,
+      taxid:taxid
+
       });
       const add = await data.save();
       return res.status(200).send({status: true,message:"คุณได้เพิ่มข้อมูล supplier",data: add});
@@ -58,7 +66,15 @@ module.exports.edit = async (req, res) => {
     if (!supplierdata) {
         return res.status(404).send({ status: false, message: "ไม่มีข้อมูล Supplier" });
     }
-    const {name,typeofbusiness,categoryofproducts,email,contact,telephone,address,country,remake,website} = req.body
+    const {name,typeofbusiness,categoryofproducts,email,contact,telephone,address,country,remake,website,taxid} = req.body    
+    if(supplierdata !=taxid)
+    {
+      const checktaxid = await Supplier.findOne({taxid:taxid})
+      // ถ้าหาเจอ ให้ res
+      if (checktaxid) {
+        return res.status(409).send({ status: false, message: "เลขประจำตัวผู้เสียภาษีซ้ำๆกัน กรุณากรอกใหม่" });
+      }
+    }  
     
     const data = {
       name:name,  //(ชื่อบริษัทของ supplier)
@@ -70,7 +86,8 @@ module.exports.edit = async (req, res) => {
       email:email, // (อีเมล์)
       contact:contact, //(ผู้ติดต่อ)
       website:website, //(เว็บไซต์)
-      remake:remake
+      remake:remake,
+      taxid:taxid
     }
     const edit = await Supplier.findByIdAndUpdate(id,data,{new:true})
     return res.status(200).send({status: true,message: "คุณได้แก้ไขข้อมูล supplier เรียบร้อย",data: edit});

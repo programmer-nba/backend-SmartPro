@@ -41,9 +41,11 @@ module.exports.add = async (req, res) => {
         alltotal:alltotal, //(ราคารวมทั้งหมด)
         statusapprove:false,
         approvedetail:[{status:"รออนุมัติ",date:Date.now()}]
-        
       });
       const add = await data.save();
+      const order = await Order.findById(order_id);
+      order.purchaseorder.push({_id:add._id,refpurchaseorder:refno})
+      const editdata = await Order.findByIdAndUpdate(order_id,{ purchaseorder:order.purchaseorder},{new:true})
       return res.status(200).send({status: true,message:"คุณได้เพิ่มข้อมูลใบสั่งซื้อสินค้าแล้ว",data: add});
   } catch (error) {
     return res.status(500).send({ status: false, error: error.message });
@@ -131,6 +133,10 @@ module.exports.delete = async (req, res) => {
       return res.status(200).send({ status: false, message: "ไม่มีข้อมูลใบสั่งซื้อนี้" });
     }
     const deletequotion = await Purchaseorder.findByIdAndDelete(req.params.id);
+    //ลบข้อมูลorder ดว้ย
+    const order = await Order.findById(purchaseorderdata?.order_id);
+    order.purchaseorder.pull({_id:id})
+    const editdata = await Order.findByIdAndUpdate(purchaseorderdata?.order_id,{ purchaseorder:order.purchaseorder},{new:true})
     return res.status(200).send({ status: true, message: "ลบข้อมูลสำเร็จ", data: deletequotion });
   } catch (error) {
     return res.status(500).send({ status: false, error: error.message });
@@ -163,8 +169,7 @@ module.exports.accept = async (req, res) => {
     if(checkstatusorder.length == 0){
 
       const order = await Order.findById(purchaseorderdata?.order_id);
-      order.statusdetail.push({status:"กำลังรอสินค้าจัดส่งให้เรา",date:Date.now()})
-      const editdata = await Order.findByIdAndUpdate(purchaseorderdata?.order_id,{ status:"กำลังรอสินค้าจัดส่งให้เรา",statusdetail:order.statusdetail},{new:true})
+      const editdata = await Order.findByIdAndUpdate(purchaseorderdata?.order_id,{ status:"รอการจัดส่งสินค้า"},{new:true})
     }
 
     
@@ -205,8 +210,7 @@ module.exports.productshipped = async (req,res) =>{
     if(checkstatusorder.length == 0){
 
       const order = await Order.findById(edit?.order_id); 
-      order.statusdetail.push({status:"รอจัดส่งให้ลูกค้า",date:Date.now()})
-      const editdata = await Order.findByIdAndUpdate(edit?.order_id,{ status:"รอจัดส่งให้ลูกค้า",statusdetail:order.statusdetail},{new:true})
+      const editdata = await Order.findByIdAndUpdate(edit?.order_id,{ status:"รอจัดส่งให้ลูกค้า",deliverystatus:true},{new:true})
     }
 
     return res.status(200).send({ status: true,message:"คุณได้รับสินค้าแล้ว", data: edit });

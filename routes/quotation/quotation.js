@@ -22,16 +22,16 @@ router.put('/:id',auth.sales,quotation.edit)
 router.delete('/:id',auth.sales,quotation.delete)
 
 //admin อนุมัติ
-router.put("/admin/accept/:id",auth.verifyTokenadmin,quotation.accept)
+router.put("/admin/accept/:id",auth.adminandmanager,quotation.accept)
 
-//ดึงข้อมูลเฉพาะ ที่ admin อนุมัติให้ออกใบแล้ว
-router.get("/getaccept/",auth.all,quotation.getaccept)
+// //ดึงข้อมูลเฉพาะ ที่ admin อนุมัติให้ออกใบแล้ว
+// router.get("/getaccept/",auth.all,quotation.getaccept)
 
-//เดลงานผ่าน
-router.put("/deal/accept/:id",auth.sales,quotation.acceptdeal)
-//เดลงานไม่ผ่าน
-router.put("/deal/unaccept/:id",auth.sales,quotation.unacceptdeal)
+// //เดลงานผ่าน
+// router.put("/deal/accept/:id",auth.sales,quotation.acceptdeal)
+// //เดลงานไม่ผ่าน
+// router.put("/deal/unaccept/:id",auth.sales,quotation.unacceptdeal)
 
-//ดึงข้อมูลที่ดีลงานผ่าน 
-router.get("/po/",auth.all,quotation.getquotationtopo)
+// //ดึงข้อมูลที่ดีลงานผ่าน 
+// router.get("/po/",auth.all,quotation.getquotationtopo)
 module.exports = router;
