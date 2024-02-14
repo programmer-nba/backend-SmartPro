@@ -1071,7 +1071,7 @@ module.exports.reportsaleall = async (req,res)=>{
         const createdAt = new Date(item.createdAt);
         const year = createdAt.getFullYear();
         const quarter = getQuarter(createdAt);
-    
+        
         // ค้นหาข้อมูลรายไตรมาส
         const quarterlyProfitIndex = ReportProfits.findIndex(
           (quarterly) => quarterly.year === year && quarterly.quarter === quarter
@@ -1079,8 +1079,8 @@ module.exports.reportsaleall = async (req,res)=>{
     
         if (quarterlyProfitIndex !== -1) {
           // ถ้ามีข้อมูลรายไตรมาสแล้ว
-          ReportProfits[monthlyProfitIndex].totalall += (item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0);
-          ReportProfits[monthlyProfitIndex].commission += (item.quotation_id != null? calculatorrate(item.quotation_id.alltotal*(item.commissionpercent/100),item.quotation_id.rateprice):0);
+          ReportProfits[quarterlyProfitIndex].totalall += (item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0);
+          ReportProfits[quarterlyProfitIndex].commission += (item.quotation_id != null? calculatorrate(item.quotation_id.alltotal*(item.commissionpercent/100),item.quotation_id.rateprice):0);
         } else {
           // ถ้ายังไม่มีข้อมูลรายไตรมาส
           ReportProfits.push({
@@ -1102,8 +1102,8 @@ module.exports.reportsaleall = async (req,res)=>{
 
         if (yearlyProfitIndex !== -1) {
           // ถ้ามีข้อมูลรายปีแล้ว
-          ReportProfits[monthlyProfitIndex].totalall += (item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0);
-          ReportProfits[monthlyProfitIndex].commission += (item.quotation_id != null? calculatorrate(item.quotation_id.alltotal*(item.commissionpercent/100),item.quotation_id.rateprice):0);
+          ReportProfits[yearlyProfitIndex].totalall += (item.quotation_id != null ? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0);
+          ReportProfits[yearlyProfitIndex].commission += (item.quotation_id != null? calculatorrate(item.quotation_id.alltotal*(item.commissionpercent/100),item.quotation_id.rateprice):0);
           } else {
           // ถ้ายังไม่มีข้อมูลรายปี
           ReportProfits.push({
