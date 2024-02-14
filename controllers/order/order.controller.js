@@ -47,8 +47,8 @@ module.exports.getbyid = async (req, res) => {
 module.exports.addorder =  async (req,res)=>{
     try{
       //ทำการgenerate reforder ขึ้นต้นด้วย Order ตามด้วยปีเดือน และเลขที่เอกสารตามลำดับ
-      const startDate = new Date();
-      const endDate = new Date();
+      const startDate = new Date(new Date().setHours(0, 0, 0, 0)); // เริ่มต้นของวันนี้
+      const endDate = new Date(new Date().setHours(23, 59, 59, 999)); // สิ้นสุดของวันนี้
       const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
       const referenceNumber = String(await Order.find({ createdAt: { $gte: startDate, $lte: endDate } }).countDocuments()).padStart(5, '0');
       const reforder = `Order${currentDate}${referenceNumber}`;
@@ -201,9 +201,8 @@ module.exports.genpo = async (req,res)=>{
     for (const items in  supplier_id){
     
       /////
-    const startDate = new Date();
-    // สร้างวันที่ของวันถัดไป
-    const endDate = new Date();
+      const startDate = new Date(new Date().setHours(0, 0, 0, 0)); // เริ่มต้นของวันนี้
+      const endDate = new Date(new Date().setHours(23, 59, 59, 999)); // สิ้นสุดของวันนี้
     endDate.setDate(endDate.getDate() + 1);
     // ปรับเวลาให้เป็นเริ่มต้นของวัน
     startDate.setHours(0, 0, 0, 0);

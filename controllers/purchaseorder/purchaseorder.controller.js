@@ -5,9 +5,8 @@ const Purchaseorder = require("../../models/purchaseorder/purchaseorder.schema")
 module.exports.add = async (req, res) => {
   try {
     const {supplier_id,sale_id,procurement_id,productdetail,rate,ratename,rateprice,ratesymbol,total,tax,alltotal,order_id,quotation_id} = req.body
-    const startDate = new Date();
-    // สร้างวันที่ของวันถัดไป
-    const endDate = new Date();
+    const startDate = new Date(new Date().setHours(0, 0, 0, 0)); // เริ่มต้นของวันนี้
+    const endDate = new Date(new Date().setHours(23, 59, 59, 999)); // สิ้นสุดของวันนี้
     endDate.setDate(endDate.getDate() + 1);
     // ปรับเวลาให้เป็นเริ่มต้นของวัน
     startDate.setHours(0, 0, 0, 0);

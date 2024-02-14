@@ -21,9 +21,8 @@ module.exports.add = async (req, res) => {
   try {
     const {customer_id,user_id,productdetail,total,tax,alltotal,rate,ratename,rateprice,ratesymbol,profitpercent,profit
       ,project,totalprofit,discount,warranty,timeofdelivery,paymentterm,remark,priceprofit,order_id,importtax,shippingcost} = req.body
-    const startDate = new Date();
-    // สร้างวันที่ของวันถัดไป
-    const endDate = new Date();
+      const startDate = new Date(new Date().setHours(0, 0, 0, 0)); // เริ่มต้นของวันนี้
+      const endDate = new Date(new Date().setHours(23, 59, 59, 999)); // สิ้นสุดของวันนี้
     endDate.setDate(endDate.getDate() + 1);
     // ปรับเวลาให้เป็นเริ่มต้นของวัน
     startDate.setHours(0, 0, 0, 0);
