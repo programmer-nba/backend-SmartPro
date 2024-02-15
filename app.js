@@ -81,6 +81,9 @@ app.use(prefix+'/commission',require("./routes/information/commission"))
 app.use(prefix+"/supplierimporttax",require("./routes/supplier/supplierimporttax"))
 //ค่าขนส่งจากต่างประเทศ
 app.use(prefix+"/suppliershipping",require("./routes/supplier/suppliershipping"))
+//เคลมสินค้า
+app.use(prefix+"/insurance",require("./routes/Insurance/Insurance"))
+
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); // หรือกำหนด origin ที่เฉพาะเจาะจง
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
