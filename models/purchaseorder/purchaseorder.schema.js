@@ -49,6 +49,7 @@ const purchaseorderSchema = new mongoose.Schema(
     importtax:{type:Number,default:0},//ภาษีนำเข้า
     shippingcost:{type:Number,default:0}, //ค่าขนส่ง
     operationcost :{type:Number,default:0}, //ค่าดำเนินงานต่างๆ
+    costtotalall:{type:Number,default:0},//ราคารวมต้นทุน
     //
     imageproduct:{type:String,default:""}, //เก็บข้อมูลรูปภาพสินค้า
     serialnumber:{type:String,default:""},
