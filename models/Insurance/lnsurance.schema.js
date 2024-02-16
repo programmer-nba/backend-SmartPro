@@ -5,18 +5,11 @@ const lnsuranceSchema = new mongoose.Schema(
     order_id: {type:mongoose.Schema.Types.ObjectId,ref:'order',required:true},
     productdetail: { type: [{
         product_id :{type: mongoose.Schema.Types.ObjectId,ref:'product'}, //(ข้อมูลสินค้า)
-        product_name:{type:String}, // (ชื่อสินค้า)
-        brand: {type: mongoose.Schema.Types.ObjectId,ref:'brand'},
+        product_name:{type:String},
         image:{type:String},
-        quantity:{type:Number},//(จำนวน)
-        price :{type:Number},
-        unit:{type:String},
-        rate: {type:mongoose.Schema.Types.ObjectId,ref:'rate'},
-        rate_name: {type:String},
-        rate_rateprice: {type:Number},
-        rate_symbol: {type:String},
         supplier_id:{type: mongoose.Schema.Types.ObjectId,ref:'supplier'},
-	      total:{type:Number} //(ราคารวมในสินค้า)
+        supplier_name:{type:String},
+        warranty:{type:Date}
     }], required: true },
     status: { type: String},
     //ค่าใช้จ่าย

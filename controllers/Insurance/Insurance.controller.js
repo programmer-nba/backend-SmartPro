@@ -3,7 +3,15 @@ const Insurance = require("../../models/Insurance/lnsurance.schema");
 //ดึงข้อมูลทั้งหมด
 module.exports.getAll = async (req, res) => {
     try {
-        const insurance = await Insurance.find();
+        const insurance = await Insurance.find()
+        .populate({
+            path:'order_id',
+            populate:[
+              {path:'customer_id'},
+              {path:'contact_id'},
+            ]
+          });
+
         res.status(200).send({status:true, message: "ดึงข้อมูลสำเร็จ", data: insurance});
     } catch (error) {
         res.status(500).send({ status:false ,message: error.message });
@@ -46,7 +54,7 @@ module.exports.sendback  =  async (req,res)=>{
     try{
         const id =req.params.id;
         const data ={
-            status:"รอจัดส่งให้ลูกค้า",
+            status:"จัดส่งสินค้า",
             cost2 : req.body.cost2
         }
         const update = await Insurance.findByIdAndUpdate(id,data,{new:true});
@@ -67,6 +75,6 @@ module.exports.sendtocustomer  =  async (req,res)=>{
         const update = await Insurance.findByIdAndUpdate(id,data,{new:true});
         res.status(200).send({status:true , message:"เคลมสินค้าสำเร็จ" ,data:update});
     } catch (error) {
-        res.status(500).send({ status:false , message: error.message });
+        res.status(500).send({ status:false , message: error.message});
     }
 }
