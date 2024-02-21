@@ -2,6 +2,8 @@ const Quotation = require("../../models/quotation/quotation.schema");
 const Producttype = require("../../models/product/producttype.schema");
 const User = require("../../models/user/user.schema");
 const Order = require("../../models/order/order.schema");
+const Supplier = require("../../models/supplier/supplier.schema");
+const Purchaseorder = require("../../models/purchaseorder/purchaseorder.schema"); 
 module.exports.reportquotationprice = async (req, res) => {
   try {
     //รายเดือน
@@ -1523,7 +1525,7 @@ module.exports.dashboardsale = async (req,res)=>{
 module.exports.reportdelivery = async (req,res)=>{
   try{
     const id = req.body.id;
-    const orderdata = await Order.find().populate("quotation_id").populate("sale_id").populate("customer_id");
+    const orderdata = await Order.find().populate("quotation_id").populate("sale_id").populate("customer_id").populate("procurement_id");
     let currentdata = ''
     let header = ''
     if(id =="month")
@@ -1572,6 +1574,68 @@ module.exports.reportdelivery = async (req,res)=>{
       currentdata= orderdata
       header= "ทั้งหมด"
     }
+
+    //report ระยะเวลาส่งของ และ ติดตามได้ แต่ละออเดอร์
+    const delivery = [];
+    currentdata = currentdata.filter((item)=>item?.dealstatus == true)
+    currentdata.forEach((item)=>{
+      let deliverydate = 0;
+      if(item?.date_customer_delivery == null ){
+        deliverydate = caltime(Date.now(),item?.deliverydate);
+      }else{
+        if(item?.date_customer_delivery != null && item?.date_customer_delivery <= item?.deliverydate){
+          deliverydate = caltime(item?.date_customer_delivery,item?.dealenddate);
+        }else{
+          deliverydate = caltime(item?.deliverydate,item?.date_customer_delivery);
+        }
+      }
+
+      //ถ้าdate_customer_delivery น้อยกว่า dealenddate แสดงว่าส่งเร็ว
+      let status= "";
+      if(item?.date_customer_delivery == null ){
+        status = "ยังจัดส่งอยู่";
+      }
+      else if(item?.date_customer_delivery != null && item?.date_customer_delivery <= item?.deliverydate){
+        status = "จัดส่งให้ลูกค้าตามดีล";
+      }else{
+        status = "จัดส่งของช้าไป "+caltime(item?.deliverydate,item?.date_customer_delivery)+" วัน";
+      }
+   
+      delivery.push({
+        order_id: item._id,
+        reforder: item.reforder,
+        customer: item?.customer_id?.name,
+        sale: item?.sale_id?.firstname + " " + item?.sale_id?.lastname,
+        procurement: (item.procurement_id != null?item?.procurement_id?.firstname + " " + item?.procurement_id?.lastname:"ยังไม่มีผู้จัดซื้อ"),
+        deliverydate: deliverydate,
+        status: status
+
+      });
+    })
+    //report จัดส่งสินค้าตามดีลช้า
+    const datasuccess  = currentdata.filter((item)=>item.status =="จัดส่งสมบูรณ์");
+    const deliverydeal = datasuccess.filter((item)=>item?.date_customer_delivery != null && item?.date_customer_delivery <= item?.deliverydate);
+    const deliveryslow = datasuccess.filter((item)=>item?.date_customer_delivery != null && item?.date_customer_delivery >= item?.deliverydate);
+    const deliveryslowdata = [];
+    deliveryslow.forEach((item)=>{
+      let deliverydate = caltime(item?.deliverydate,item?.date_customer_delivery);
+      deliveryslowdata.push({
+        order_id: item._id,
+        reforder: item.reforder,
+        customer: item?.customer_id?.name,
+        sale: item?.sale_id?.firstname + " " + item?.sale_id?.lastname,
+        procurement: (item.procurement_id != null?item?.procurement_id?.firstname + " " + item?.procurement_id?.lastname:"ยังไม่มีผู้จัดซื้อ"),
+        deliverydate: deliverydate,
+      });
+    })
+
+    const dashboard = {
+      totalorder:currentdata.length,
+      totaldelivery:deliverydeal.length,
+      totaldeliveryslow:deliveryslow.length
+    }
+    return res.status(200).json({ status: true,header:header,dashboard:dashboard,delivery:delivery,deliveryslowdata:deliveryslowdata});
+
     
 
   }catch(error){
@@ -1580,10 +1644,858 @@ module.exports.reportdelivery = async (req,res)=>{
 }
 
 //report สินค้าค้างสต็อก
+module.exports.reportstock = async (req,res)=>{
+  try{
+    const id = req.body.id;
+    const orderdata = await Order.find().populate("quotation_id").populate("sale_id").populate("customer_id").populate("procurement_id");
+    let currentdata = ''
+    let header = ''
+    if(id =="month")
+      {
+        const currentMonth = new Date().getMonth() + 1;
+        const currentYear = new Date().getFullYear();
+        currentdata = orderdata.filter(items => new Date(items.createdAt).getMonth() + 1 == currentMonth && new Date(items.createdAt).getFullYear() == currentYear);
+        header = convertToThaiMonth(currentMonth)+" "+currentYear;
+      }
+    else if (id === "quarter") {
+      // กรณีเลือก "quarter"
+      const currentQuarter = getQuarter(new Date());
+      currentdata = orderdata.filter(items => getQuarter(new Date(items.createdAt)) === currentQuarter);
+      header = `ไตรมาสที่ ${currentQuarter}  ปี ${new Date().getFullYear()}`;
+    }
+    else if (id === "year") {
+      // กรณีเลือก "year"
+      const currentYear = new Date().getFullYear();
+      currentdata = orderdata.filter(items => new Date(items.createdAt).getFullYear() == currentYear);
+      header = `ปี ${currentYear}`;
+    }
+    else if(id =="other"){
+      const date = req.body.date
+      if(date.length ==2){
+        const startDate = new Date(date[0]);
+        const endDate = new Date(date[1]);
+        currentdata = orderdata.filter((item) => {
+          const itemDate = new Date(item.createdAt);
+          return itemDate >= startDate && itemDate <= endDate;
+        });
+
+        /// ตั้งหัว
+        // Format header based on start and end date
+        const startDay = startDate.getDate();
+        const startMonth = startDate.getMonth() + 1;
+        const startYear = startDate.getFullYear();
+        const endDay = endDate.getDate();
+        const endMonth = endDate.getMonth() + 1;
+        const endYear = endDate.getFullYear();
+        header = `ระหว่าง ${startDay} ${convertToThaiMonth(startMonth)} ${startYear} ถึง ${endDay} ${convertToThaiMonth(endMonth)} ${endYear}`;
+      }
+      else{
+        return res.status(400).json("ส่งวันมาไม่ครบ");
+      }
+    }
+    else{
+      currentdata= orderdata
+      header= "ทั้งหมด"
+    }
+    const datastock = orderdata.filter((item)=>item?.status == "รอจัดส่งให้ลูกค้า")
+    const stock = [];
+
+    datastock.forEach((item)=>{
+      if(id == "month"){
+        //คำนวณสินค้า ค้างสต็อก รายเดือน
+        const createdAt = new Date(item.createdAt);
+        const year = createdAt.getFullYear();
+        const month = createdAt.getMonth() + 1; // เดือนเริ่มที่ 1
+        const monthlyStockIndex = stock.findIndex(
+          (monthly) => monthly.year === year && monthly.month === month
+        );
+        if (monthlyStockIndex !== -1) {
+          // ถ้ามีข้อมูลรายเดือนแล้ว
+          stock[monthlyStockIndex].count += 1;
+          stock[monthlyStockIndex].totalprice += (item.quotation_id != null? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0) ;
+          stock[monthlyStockIndex].amount += (item.quotation_id != null? item.quotation_id.amount:0);
+          stock[monthlyStockIndex].orderlength += 1;
+        } else {
+          // ถ้ายังไม่มีข้อมูลรายเดือน
+          stock.push({
+            year: year,
+            month: month,
+            count: 1,
+            totalprice: (item.quotation_id != null? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0),
+            amount: (item.quotation_id != null? item.quotation_id.amount:0),
+            orderlength: 1,
+          });
+        }
+        
+      }else if(id =="quarter"){
+         //คำนวณสินค้า ค้างสต็อก รายเดือน
+          const createdAt = new Date(item.createdAt);
+          const year = createdAt.getFullYear();
+          const quarter = getQuarter(createdAt);
+          const quarterlyStockIndex = stock.findIndex(
+            (quarterly) => quarterly.year === year && quarterly.quarter === quarter
+          );
+          if (quarterlyStockIndex !== -1) {
+            // ถ้ามีข้อมูลรายเดือนแล้ว
+            stock[quarterlyStockIndex].totalprice += (item.quotation_id != null? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0);
+            stock[quarterlyStockIndex].amount += (item.quotation_id != null? item.quotation_id.amount:0);
+            stock[quarterlyStockIndex].orderlength += 1;
+          } else {
+            // ถ้ายังไม่มีข้อมูลรายเดือน
+            stock.push({
+              year: year,
+              quarter: quarter,
+              totalprice: (item.quotation_id != null? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0),
+              amount: (item.quotation_id != null? item.quotation_id.amount:0),
+              orderlength: 1,
+            });
+          }
+
+
+      }
+      else{
+        //คำนวณสินค้า ค้างสต็อก รายปี
+        const createdAt = new Date(item.createdAt);
+        const year = createdAt.getFullYear();
+        const yearlyStockIndex = stock.findIndex(
+          (yearly) => yearly.year === year
+        );
+        if (yearlyStockIndex !== -1) {
+          // ถ้ามีข้อมูลรายเดือนแล้ว
+          stock[yearlyStockIndex].totalprice += (item.quotation_id != null? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0);
+          stock[yearlyStockIndex].amount += (item.quotation_id != null? item.quotation_id.amount:0);
+          stock[yearlyStockIndex].orderlength += 1;
+        } else {
+          // ถ้ายังไม่มีข้อมูลรายเดือน
+          stock.push({
+            year: year,
+            totalprice: (item.quotation_id != null? calculatorrate(item.quotation_id.alltotal, item.quotation_id.rateprice):0),
+            amount: (item.quotation_id != null? item.quotation_id.amount:0),
+            orderlength: 1,
+          });
+        }
+
+      }
+    })
+    const dashboard = {
+      totalorder:datastock.length,  
+      pricevalue:stock.reduce((sum, item) => sum + item.totalprice, 0),
+    }
+    return res.status(200).json({ status: true,header:header,dashboard:dashboard,stock:stock});
+  }catch(error){
+    return res.status(500).send({status:false,error:error.message});
+  }
+}
+
 
 //report supplier
+module.exports.reportsupplier = async (req,res)=>{
+  try{
+    const id = req.body.id;
+    const purchaseorderdata = await Purchaseorder.find().populate("quotation_id").populate("sale_id").populate("procurement_id").populate("supplier_id");
+    let currentdata = ''
+    let header = ''
+    if(id =="month")
+      {
+        const currentMonth = new Date().getMonth() + 1;
+        const currentYear = new Date().getFullYear();
+        currentdata = purchaseorderdata.filter(items => new Date(items.createdAt).getMonth() + 1 == currentMonth && new Date(items.createdAt).getFullYear() == currentYear);
+        header = convertToThaiMonth(currentMonth)+" "+currentYear;
+      }
+    else if (id === "quarter") {
+      // กรณีเลือก "quarter"
+      const currentQuarter = getQuarter(new Date());
+      currentdata = purchaseorderdata.filter(items => getQuarter(new Date(items.createdAt)) === currentQuarter);
+      header = `ไตรมาสที่ ${currentQuarter}  ปี ${new Date().getFullYear()}`;
+    }
+    else if (id === "year") {
+      // กรณีเลือก "year"
+      const currentYear = new Date().getFullYear();
+      currentdata = purchaseorderdata.filter(items => new Date(items.createdAt).getFullYear() == currentYear);
+      header = `ปี ${currentYear}`;
+    }
+    else if(id =="other"){
+      const date = req.body.date
+      if(date.length ==2){
+        const startDate = new Date(date[0]);
+        const endDate = new Date(date[1]);
+        currentdata = purchaseorderdata.filter((item) => {
+          const itemDate = new Date(item.createdAt);
+          return itemDate >= startDate && itemDate <= endDate;
+        });
+
+        /// ตั้งหัว
+        // Format header based on start and end date
+        const startDay = startDate.getDate();
+        const startMonth = startDate.getMonth() + 1;
+        const startYear = startDate.getFullYear();
+        const endDay = endDate.getDate();
+        const endMonth = endDate.getMonth() + 1;
+        const endYear = endDate.getFullYear();
+        header = `ระหว่าง ${startDay} ${convertToThaiMonth(startMonth)} ${startYear} ถึง ${endDay} ${convertToThaiMonth(endMonth)} ${endYear}`;
+      }
+      else{
+        return res.status(400).json("ส่งวันมาไม่ครบ");
+      }
+    }
+    else{
+      currentdata= purchaseorderdata
+      header= "ทั้งหมด"
+    }
+    const supplierdata = await Supplier.find();
+    //
+    const supplier = [];
+    supplierdata.forEach((item)=>{
+      supplier.push({
+        supplier_id: item._id,
+        name: item.name,
+        totalprice:0,
+        count:0,
+      });
+    })
+
+    currentdata.forEach((item)=>{
+      const id = item?.supplier_id?._id;  
+      const find = supplier.findIndex((item) => JSON.parse(JSON.stringify(item.supplier_id)) == JSON.parse(JSON.stringify(id)));
+      if (find !== -1) {
+        supplier[find].totalprice += calculatorrate(item.alltotal, item.rateprice);
+        supplier[find].count += 1;
+      }
+    })
+
+
+    const deliberysucces =  [];
+    const deliverysuccesdata =  purchaseorderdata.filter((item)=>item.deliverystatus =="ส่งของตามดิว");
+    deliverysuccesdata.forEach((item)=>{
+      const find = deliberysucces.findIndex((items) => JSON.parse(JSON.stringify(items.supplier_id)) == JSON.parse(JSON.stringify(item?.supplier_id?._id)));
+      if (find != -1) {
+        deliberysucces[find].totalprice += calculatorrate(item.alltotal, item.rateprice);
+        deliberysucces[find].count += 1;
+        deliberysucces[find].purchaseorders.push(item);
+      }else{
+        const po = [item];
+        deliberysucces.push({
+          supplier_id: item?.supplier_id?._id,
+          name: item?.supplier_id?.name,
+          totalprice:calculatorrate(item.alltotal, item.rateprice),
+          count:1,
+          purchaseorders:po
+        });
+      }
+    })
+
+    
+    const deliveryslow = [];
+    const deliveryslowdata = purchaseorderdata.filter((item)=>item.deliverystatus =="ส่งของล่าช้า");
+    deliveryslowdata.forEach((item)=>{
+      const find = deliveryslow.findIndex((items) => JSON.parse(JSON.stringify(items.supplier_id)) == JSON.parse(JSON.stringify(item?.supplier_id?._id)));
+      if (find != -1) {
+        deliveryslow[find].totalprice += calculatorrate(item.alltotal, item.rateprice);
+        deliveryslow[find].count += 1;
+        deliveryslow[find].purchaseorders.push(item);
+      }else{
+        const po = [item];
+        deliveryslow.push({
+          supplier_id: item?.supplier_id?._id,
+          name: item?.supplier_id?.name,
+          totalprice:calculatorrate(item.alltotal, item.rateprice),
+          count:1,
+          purchaseorders:po
+        });
+      }
+    })
+
+    const dashboard = {
+      totalorder:currentdata.length,
+      totalprice:supplier.reduce((sum, item) => sum + item.totalprice, 0),
+    }
+
+    return res.status(200).json({ status: true,header:header,dashboard:dashboard,supplier:supplier,deliberysucces:deliberysucces,deliveryslow:deliveryslow});
+
+
+  }catch(error){
+    return res.status(500).send({status:false,error:error.message});
+  }
+}
 
 //report กำไรและค่าใช้จ่าย
+module.exports.reportprofit = async (req,res)=>{
+  try{
+    const id = req.body.id;
+    const orderdata = await Order.find().populate("quotation_id").populate("sale_id").populate("customer_id").populate("procurement_id")
+    .populate("purchaseorder._id");
+    let currentdata = ''
+    let header = ''
+    if(id =="month")
+    {
+        const currentMonth = new Date().getMonth() + 1;
+        const currentYear = new Date().getFullYear();
+        currentdata = orderdata.filter(items => new Date(items.createdAt).getMonth() + 1 == currentMonth && new Date(items.createdAt).getFullYear() == currentYear);
+        header = convertToThaiMonth(currentMonth)+" "+currentYear;
+    }
+    else if (id === "quarter") {
+      // กรณีเลือก "quarter"
+      const currentQuarter = getQuarter(new Date());
+      currentdata = orderdata.filter(items => getQuarter(new Date(items.createdAt)) === currentQuarter);
+      header = `ไตรมาสที่ ${currentQuarter}  ปี ${new Date().getFullYear()}`;
+    }
+    else if (id === "year") {
+      // กรณีเลือก "year"
+      const currentYear = new Date().getFullYear();
+      currentdata = orderdata.filter(items => new Date(items.createdAt).getFullYear() == currentYear);
+      header = `ปี ${currentYear}`;
+    }
+    else if(id =="other"){
+      const date = req.body.date
+      if(date.length ==2){
+        const startDate = new Date(date[0]);
+        const endDate = new Date(date[1]);
+        currentdata = orderdata.filter((item) => {
+          const itemDate = new Date(item.createdAt);
+          return itemDate >= startDate && itemDate <= endDate;
+        });
+
+        /// ตั้งหัว
+        // Format header based on start and end date
+        const startDay = startDate.getDate();
+        const startMonth = startDate.getMonth() + 1;
+        const startYear = startDate.getFullYear();
+        const endDay = endDate.getDate();
+        const endMonth = endDate.getMonth() + 1;
+        const endYear = endDate.getFullYear();
+        header = `ระหว่าง ${startDay} ${convertToThaiMonth(startMonth)} ${startYear} ถึง ${endDay} ${convertToThaiMonth(endMonth)} ${endYear}`;
+      }
+      else{
+        return res.status(400).json("ส่งวันมาไม่ครบ");
+      }
+    }
+    else{
+      currentdata= orderdata
+      header= "ทั้งหมด"
+    }
+    const ReportProfits = [];
+    const dataprofits = currentdata.filter(items => items.status == "จัดส่งสมบูรณ์");
+    dataprofits.forEach((item)=>{
+      let cost = 0;
+      let importtax = 0;
+      let shippingcost = 0;
+      let operationcost = 0;
+      let purchaseorder =item?.purchaseorder
+      purchaseorder.forEach((item2)=>{  
+        cost += item2?._id?.alltotal;
+        importtax += item2?._id?.importtax;
+        shippingcost += item2?._id?.shippingcost;
+        operationcost += item2?._id?.operationcost;
+      })
+      const data = {
+        order_id: item._id,
+        date: item.createdAt,
+        reforder: item.reforder,
+        customer: item?.customer_id?.name,
+        sale: item?.sale_id?.firstname + " " + item?.sale_id?.lastname,
+        procurement: (item.procurement_id != null?item?.procurement_id?.firstname + " " + item?.procurement_id?.lastname:"ยังไม่มีผู้จัดซื้อ"),
+        totalall: (item?.quotation_id != null? calculatorrate(item?.quotation_id?.alltotal,item?.quotation_id?.rateprice) :0),
+        cost: cost,
+        importtax: importtax,
+        shippingcost: shippingcost,
+        operationcost: operationcost,
+        profit: (item?.quotation_id != null? calculatorrate(item?.quotation_id?.alltotal-cost-importtax-shippingcost-operationcost,item?.quotation_id?.rateprice):0),
+      }
+      ReportProfits.push(data);
+    })
+    //report ค่าขนส่งใน ประเทศ และต่างประเทศ /เดือน /ปี
+    const shippingcost = [];
+    const shippingdata = orderdata.filter((item)=>item?.status == "จัดส่งสมบูรณ์");
+    shippingdata.forEach((item)=>{
+        let shippingprice = 0;
+        item.purchaseorder.forEach((item2)=>{ 
+          shippingprice += item2?._id?.shippingcost;  
+        })
+      if(id == "month"){
+        const createdAt = new Date(item.createdAt);
+        const year = createdAt.getFullYear();
+        const month = createdAt.getMonth() + 1; // เดือนเริ่มที่ 1
+        const monthlyShippingIndex = shippingcost.findIndex(
+          (monthly) => monthly.year === year && monthly.month === month
+        );
+          
+        if (monthlyShippingIndex !== -1) {
+          // ถ้ามีข้อมูลรายเดือนแล้ว
+
+          shippingcost[monthlyShippingIndex].shippingcost += shippingprice;
+        
+          shippingcost[monthlyShippingIndex].orderlength += 1;
+        } else {
+          // ถ้ายังไม่มีข้อมูลรายเดือน
+          shippingcost.push({
+            year: year,
+            month: month,
+            orderlength: 1,
+            shippingcost: shippingprice,
+            
+          });
+        }
+      }else if(id =="quarter"){
+        const createdAt = new Date(item.createdAt);
+        const year = createdAt.getFullYear();
+        const quarter = getQuarter(createdAt);
+        const quarterlyShippingIndex = shippingcost.findIndex(
+          (quarterly) => quarterly.year === year && quarterly.quarter === quarter
+        );
+        if (quarterlyShippingIndex !== -1) {
+          // ถ้ามีข้อมูลรายเดือนแล้ว
+          shippingcost[quarterlyShippingIndex].shippingcost += shippingprice;
+          shippingcost[quarterlyShippingIndex].orderlength += 1;
+        } else {
+          // ถ้ายังไม่มีข้อมูลรายเดือน
+          shippingcost.push({
+            year: year,
+            quarter: quarter,
+            shippingcost: shippingprice,
+            orderlength: 1,
+          });
+        }
+      }
+      else{
+        const createdAt = new Date(item.createdAt);
+        const year = createdAt.getFullYear();
+        const yearlyShippingIndex = shippingcost.findIndex(
+          (yearly) => yearly.year === year
+        );
+        if (yearlyShippingIndex !== -1) {
+          // ถ้ามีข้อมูลรายเดือนแล้ว
+          
+          shippingcost[yearlyShippingIndex].shippingcost += shippingprice;
+          shippingcost[yearlyShippingIndex].orderlength += 1;
+        } else {
+          // ถ้ายังไม่มีข้อมูลรายเดือน
+          shippingcost.push({
+            year: year,
+            shippingcost: shippingprice,
+            orderlength: 1,
+          });
+        }
+      }
+    })
+
+    const dashboard = {
+      totalorder:dataprofits.length,  
+      totalprofit:ReportProfits.reduce((sum, item) => sum + item.profit, 0),
+    }
+
+
+    return res.status(200).json({ status: true,header:header,dashboard:dashboard,reportprofits:ReportProfits,shippingcost:shippingcost});
+  }
+  catch(error){
+    return res.status(500).send({status:false,error:error.message});
+  }
+}
+
+//report สรุปยอดขายวางบิล
+module.exports.reportinvoice = async (req,res)=>{
+  try{
+    const id = req.body.id;
+    const orderdata = await Order.find().populate("quotation_id").populate("sale_id")
+    .populate("customer_id").populate("procurement_id").populate("purchaseorder._id")
+    .populate({
+      path:'invoiceid',
+      populate:[
+        {path:'account_id'}
+      ]
+    });
+    let currentdata = ''
+    let header = ''
+    if(id =="month")
+      {
+        const currentMonth = new Date().getMonth() + 1;
+        const currentYear = new Date().getFullYear();
+        currentdata = orderdata.filter(items => new Date(items.createdAt).getMonth() + 1 == currentMonth && new Date(items.createdAt).getFullYear() == currentYear);
+        header = convertToThaiMonth(currentMonth)+" "+currentYear;
+      }
+    else if (id === "quarter") {
+      // กรณีเลือก "quarter"
+      const currentQuarter = getQuarter(new Date());
+      currentdata = orderdata.filter(items => getQuarter(new Date(items.createdAt)) === currentQuarter);
+      header = `ไตรมาสที่ ${currentQuarter}  ปี ${new Date().getFullYear()}`;
+    }
+    else if (id === "year") {
+      // กรณีเลือก "year"
+      const currentYear = new Date().getFullYear();
+      currentdata = orderdata.filter(items => new Date(items.createdAt).getFullYear() == currentYear);
+      header = `ปี ${currentYear}`;
+    }
+    else if(id =="other"){
+      const date = req.body.date
+      if(date.length ==2){
+        const startDate = new Date(date[0]);
+        const endDate = new Date(date[1]);
+        currentdata = orderdata.filter((item) => {
+          const itemDate = new Date(item.createdAt);
+          return itemDate >= startDate && itemDate <= endDate;
+        });
+
+        /// ตั้งหัว
+        // Format header based on start and end date
+        const startDay = startDate.getDate();
+        const startMonth = startDate.getMonth() + 1;
+        const startYear = startDate.getFullYear();
+        const endDay = endDate.getDate();
+        const endMonth = endDate.getMonth() + 1;
+        const endYear = endDate.getFullYear();
+        header = `ระหว่าง ${startDay} ${convertToThaiMonth(startMonth)} ${startYear} ถึง ${endDay} ${convertToThaiMonth(endMonth)} ${endYear}`;
+      }
+      else{
+        return res.status(400).json("ส่งวันมาไม่ครบ");
+      }
+    }
+    else{
+      currentdata= orderdata
+      header= "ทั้งหมด"
+    }
+    //report สรุปยอดขายที่วางบิลไปแล้ว/เดือน/ปี เก็บเงินได้เมื่อไหร่
+    const invoice = [];
+    const invoicedata = currentdata.filter((item)=>item?.invoiceid != null && item?.invoiceid?.stauts == "ชำระเงินแล้ว");
+    invoicedata.forEach((item)=>{
+      invoice.push({
+        order_id: item._id,
+        reforder: item.reforder,
+        accountname: item?.invoiceid?.account_id?.firstname + " " + item?.invoiceid?.account_id?.lastname,
+        invoicedate: item?.invoiceid?.invoicedate,
+        total: calculatorrate(item?.invoiceid?.total,item?.invoiceid?.rateprice),
+        status: item?.invoiceid?.stauts,
+        dateofpayment: item?.invoiceid?.dateofpayment,
+      });   
+    })
+
+    //report สรุปยอดขายที่วางบิล/เดือน/ปี ที่ยังไม่เก็บเงินไม่ได้
+    const invoiceunpaid = [];
+    const invoiceunpaiddata = orderdata.filter((item)=>item?.invoiceid != null && item?.invoiceid?.stauts == "รอชำระเงิน");
+    invoiceunpaiddata.forEach((item)=>{
+      invoiceunpaid.push({
+        order_id: item._id,
+        reforder: item.reforder,
+        accountname: item?.invoiceid?.account_id?.firstname + " " + item?.invoiceid?.account_id?.lastname,
+        invoicedate: item?.invoiceid?.invoicedate,
+        total: calculatorrate(item?.invoiceid?.total,item?.invoiceid?.rateprice),
+        status: item?.invoiceid?.stauts,
+        dateofpayment: item?.invoiceid?.dateofpayment,
+      });   
+    })
+    //report สรุปยอดขายที่ยังไม่ได้วางบิล/เดือน/ปี
+    const notinvoice = [];
+    const notinvoicedata = orderdata.filter((item)=> item?.invoiceid == null && item?.dealstatus == true);
+    notinvoicedata.forEach((item)=>{
+      notinvoice.push({
+        order_id: item._id,
+        reforder: item.reforder,
+        accountname: "ยังไม่มีบิล",
+        invoicedate: "ยังไม่มีบิล",
+        total: (item?.quotation_id != null? calculatorrate(item?.quotation_id?.alltotal,item?.quotation_id?.rateprice) :0),
+        status: "ยังไม่มีบิล",
+        dateofpayment: "ยังไม่มีบิล",
+      });   
+    })
+	  //report สรุปยอดลงทุนงานไปแล้วกี่บาท แต่ยังไม่ได้วางบิล/เดือน/ปี
+    const notinvoicecost = [];
+    const notinvoicecostdata = orderdata.filter((item)=>item?.invoiceid == null && item?.dealstatus == true && item?.purchaseorder != null);
+    notinvoicecostdata.forEach((item)=>{
+      let cost = 0;
+      item.purchaseorder.forEach((item2)=>{
+
+        if(item2?._id?.statusapprove == true)
+       {
+            cost += item2?._id?.alltotal;
+        }
+      });
+      if (cost != 0){
+        notinvoicecost.push({
+          order_id: item._id,
+          reforder: item.reforder,
+          total: cost,
+          status: "ยังไม่มีบิล",
+        });
+      }
+      
+
+    })
+     const dashboard = {
+      //report สรุปยอดขายที่วางบิลไปแล้ว/เดือน/ปี เก็บเงินได้เมื่อไหร่
+      totalinvoice:invoice.length, // จำนวนวางบิลไปแล้ว
+      totalinvoicepaid:invoice.reduce((sum, item) => sum + item.total, 0),  //ยอดขายไปวางบิล และเก็บเงิน
+
+      //report สรุปยอดขายที่วางบิล/เดือน/ปี ที่ยังไม่เก็บเงินไม่ได้
+      totalinvoiceunpaid:invoiceunpaid.length, // จำนวนวางบิลที่ยังไม่ได้เก็บเงิน
+      totalinvoiceunpaidprice:invoiceunpaid.reduce((sum, item) => sum + item.total, 0), //ยอดขายที่ยังไม่ได้เก็บเงิน
+
+      //report สรุปยอดขายที่ยังไม่ได้วางบิล/เดือน/ปี
+      totalnotinvoice:notinvoice.length, // จำนวนยังไม่ได้วางบิล
+      totalnotinvoiceprice:notinvoice.reduce((sum, item) => sum + item.total, 0), //ยอดขายที่ยังไม่ได้วางบิล
+      //report สรุปยอดลงทุนงานไปแล้วกี่บาท แต่ยังไม่ได้วางบิล/เดือน/ปี
+      totalnotinvoicecost:notinvoicecost.length, // จำนวนยังไม่ได้วางบิล
+      totalnotinvoicecostprice:notinvoicecost.reduce((sum, item) => sum + item.total, 0), //ยอดขายที่ยังไม่ได้วางบิล
+      
+
+    }
+    return res.status(200).json({ status: true,header:header,dashboard:dashboard,invoice:invoice,invoiceunpaid:invoiceunpaid,notinvoice:notinvoice,notinvoicecost:notinvoicecost});
+  }
+  catch(error){
+    return res.status(500).send({status:false,error:error.message});
+  }
+}
+//report  Cash Flow
+module.exports.reportcashflow = async (req,res)=>{
+  try{
+    const id = req.body.id;
+    const orderdata = await Order.find().populate("quotation_id").populate("sale_id")
+    .populate("customer_id").populate("procurement_id").populate("purchaseorder._id")
+    .populate({
+      path:'invoiceid',
+      populate:[
+        {path:'account_id'}
+      ]
+    });
+    let currentdata = ''
+    let header = ''
+    if(id =="month")
+      {
+        const currentMonth = new Date().getMonth() + 1;
+        const currentYear = new Date().getFullYear();
+        currentdata = orderdata.filter(items => new Date(items.createdAt).getMonth() + 1 == currentMonth && new Date(items.createdAt).getFullYear() == currentYear);
+        header = convertToThaiMonth(currentMonth)+" "+currentYear;
+      }
+    else if (id === "quarter") {
+      // กรณีเลือก "quarter"
+      const currentQuarter = getQuarter(new Date());
+      currentdata = orderdata.filter(items => getQuarter(new Date(items.createdAt)) === currentQuarter);
+      header = `ไตรมาสที่ ${currentQuarter}  ปี ${new Date().getFullYear()}`;
+    }
+    else if (id === "year") {
+      // กรณีเลือก "year"
+      const currentYear = new Date().getFullYear();
+      currentdata = orderdata.filter(items => new Date(items.createdAt).getFullYear() == currentYear);
+      header = `ปี ${currentYear}`;
+    }
+    else if(id =="other"){
+      const date = req.body.date
+      if(date.length ==2){
+        const startDate = new Date(date[0]);
+        const endDate = new Date(date[1]);
+        currentdata = orderdata.filter((item) => {
+          const itemDate = new Date(item.createdAt);
+          return itemDate >= startDate && itemDate <= endDate;
+        });
+
+        /// ตั้งหัว
+        // Format header based on start and end date
+        const startDay = startDate.getDate();
+        const startMonth = startDate.getMonth() + 1;
+        const startYear = startDate.getFullYear();
+        const endDay = endDate.getDate();
+        const endMonth = endDate.getMonth() + 1;
+        const endYear = endDate.getFullYear();
+        header = `ระหว่าง ${startDay} ${convertToThaiMonth(startMonth)} ${startYear} ถึง ${endDay} ${convertToThaiMonth(endMonth)} ${endYear}`;
+      }
+      else{
+        return res.status(400).json("ส่งวันมาไม่ครบ");
+      }
+    }
+    else{
+      currentdata= orderdata
+      header= "ทั้งหมด"
+    }
+
+    //report รายการรับเงิน - รับจ่าย
+    const cashflow = [];
+    // const cashflowdata = currentdata.filter((item)=>item.);
+
+  }catch(error){
+    return res.status(500).send({status:false,error:error.message});
+  }
+
+}
+
+//report กำไร -ขาดทุน  และ ค่าภาษีนำเข้า
+module.exports.reportprofitandloss = async (req,res)=>{
+  try{
+    const id = req.body.id;
+    const orderdata = await Order.find().populate("quotation_id").populate("sale_id").populate("customer_id").populate("procurement_id")
+    .populate("purchaseorder._id");
+    let currentdata = ''
+    let header = ''
+    if(id =="month")
+    {
+        const currentMonth = new Date().getMonth() + 1;
+        const currentYear = new Date().getFullYear();
+        currentdata = orderdata.filter(items => new Date(items.createdAt).getMonth() + 1 == currentMonth && new Date(items.createdAt).getFullYear() == currentYear);
+        header = convertToThaiMonth(currentMonth)+" "+currentYear;
+    }
+    else if (id === "quarter") {
+      // กรณีเลือก "quarter"
+      const currentQuarter = getQuarter(new Date());
+      currentdata = orderdata.filter(items => getQuarter(new Date(items.createdAt)) === currentQuarter);
+      header = `ไตรมาสที่ ${currentQuarter}  ปี ${new Date().getFullYear()}`;
+    }
+    else if (id === "year") {
+      // กรณีเลือก "year"
+      const currentYear = new Date().getFullYear();
+      currentdata = orderdata.filter(items => new Date(items.createdAt).getFullYear() == currentYear);
+      header = `ปี ${currentYear}`;
+    }
+    else if(id =="other"){
+      const date = req.body.date
+      if(date.length ==2){
+        const startDate = new Date(date[0]);
+        const endDate = new Date(date[1]);
+        currentdata = orderdata.filter((item) => {
+          const itemDate = new Date(item.createdAt);
+          return itemDate >= startDate && itemDate <= endDate;
+        });
+
+        /// ตั้งหัว
+        // Format header based on start and end date
+        const startDay = startDate.getDate();
+        const startMonth = startDate.getMonth() + 1;
+        const startYear = startDate.getFullYear();
+        const endDay = endDate.getDate();
+        const endMonth = endDate.getMonth() + 1;
+        const endYear = endDate.getFullYear();
+        header = `ระหว่าง ${startDay} ${convertToThaiMonth(startMonth)} ${startYear} ถึง ${endDay} ${convertToThaiMonth(endMonth)} ${endYear}`;
+      }
+      else{
+        return res.status(400).json("ส่งวันมาไม่ครบ");
+      }
+    }
+    else{
+      currentdata= orderdata
+      header= "ทั้งหมด"
+    }
+    const ReportProfits = [];
+    const dataprofits = currentdata.filter(items => items.status == "จัดส่งสมบูรณ์");
+    dataprofits.forEach((item)=>{
+      let cost = 0;
+      let importtax = 0;
+      let shippingcost = 0;
+      let operationcost = 0;
+      let purchaseorder =item?.purchaseorder
+      purchaseorder.forEach((item2)=>{  
+        cost += item2?._id?.alltotal;
+        importtax += item2?._id?.importtax;
+        shippingcost += item2?._id?.shippingcost;
+        operationcost += item2?._id?.operationcost;
+      })
+      const data = {
+        order_id: item._id,
+        date: item.createdAt,
+        reforder: item.reforder,
+        customer: item?.customer_id?.name,
+        sale: item?.sale_id?.firstname + " " + item?.sale_id?.lastname,
+        procurement: (item.procurement_id != null?item?.procurement_id?.firstname + " " + item?.procurement_id?.lastname:"ยังไม่มีผู้จัดซื้อ"),
+        totalall: (item?.quotation_id != null? calculatorrate(item?.quotation_id?.alltotal,item?.quotation_id?.rateprice) :0),
+        cost: cost,
+        importtax: importtax,
+        shippingcost: shippingcost,
+        operationcost: operationcost,
+        profit: (item?.quotation_id != null? calculatorrate(item?.quotation_id?.alltotal-cost-importtax-shippingcost-operationcost,item?.quotation_id?.rateprice):0),
+      }
+      ReportProfits.push(data);
+    })
+    //report ค่าขนส่งใน ประเทศ และต่างประเทศ /เดือน /ปี
+    const shippingcost = [];
+    const shippingdata = orderdata.filter((item)=>item?.status == "จัดส่งสมบูรณ์");
+    shippingdata.forEach((item)=>{
+        let importtax = 0;
+        item.purchaseorder.forEach((item2)=>{ 
+          importtax += item2?._id?.importtax;  
+        })
+        let vat = 0;
+        vat = item.quotation_id.tax 
+      
+      if(id == "month"){
+        const createdAt = new Date(item.createdAt);
+        const year = createdAt.getFullYear();
+        const month = createdAt.getMonth() + 1; // เดือนเริ่มที่ 1
+        const monthlyShippingIndex = shippingcost.findIndex(
+          (monthly) => monthly.year === year && monthly.month === month
+        );
+          
+        if (monthlyShippingIndex !== -1) {
+          // ถ้ามีข้อมูลรายเดือนแล้ว
+
+          shippingcost[monthlyShippingIndex].importtax += importtax;
+          shippingcost[monthlyShippingIndex].vat += vat;
+        
+          shippingcost[monthlyShippingIndex].orderlength += 1;
+        } else {
+          // ถ้ายังไม่มีข้อมูลรายเดือน
+          shippingcost.push({
+            year: year,
+            month: month,
+            orderlength: 1,
+            importtax: importtax,
+            vat: vat,
+            
+          });
+        }
+      }else if(id =="quarter"){
+        const createdAt = new Date(item.createdAt);
+        const year = createdAt.getFullYear();
+        const quarter = getQuarter(createdAt);
+        const quarterlyShippingIndex = shippingcost.findIndex(
+          (quarterly) => quarterly.year === year && quarterly.quarter === quarter
+        );
+        if (quarterlyShippingIndex !== -1) {
+          // ถ้ามีข้อมูลรายเดือนแล้ว
+          shippingcost[quarterlyShippingIndex].importtax += importtax;
+          shippingcost[quarterlyShippingIndex].vat += vat;
+          shippingcost[quarterlyShippingIndex].orderlength += 1;
+        } else {
+          // ถ้ายังไม่มีข้อมูลรายเดือน
+          shippingcost.push({
+            year: year,
+            quarter: quarter,
+            importtax: importtax,
+            vat: vat,
+            orderlength: 1,
+          });
+        }
+      }
+      else{
+        const createdAt = new Date(item.createdAt);
+        const year = createdAt.getFullYear();
+        const yearlyShippingIndex = shippingcost.findIndex(
+          (yearly) => yearly.year === year
+        );
+        if (yearlyShippingIndex !== -1) {
+          // ถ้ามีข้อมูลรายเดือนแล้ว
+          
+          shippingcost[yearlyShippingIndex].importtax += importtax;
+          shippingcost[yearlyShippingIndex].vat += vat;
+          shippingcost[yearlyShippingIndex].orderlength += 1;
+        } else {
+          // ถ้ายังไม่มีข้อมูลรายเดือน
+          shippingcost.push({
+            year: year,
+            importtax: importtax,
+            vat: vat,
+            orderlength: 1,
+          });
+        }
+      }
+    })
+
+    const dashboard = {
+      totalorder:dataprofits.length,  
+      totalprofit:ReportProfits.reduce((sum, item) => sum + item.profit, 0),
+    }
+
+
+    return res.status(200).json({ status: true,header:header,dashboard:dashboard,reportprofits:ReportProfits,shippingcost:shippingcost});
+  }
+  catch(error){
+    return res.status(500).send({status:false,error:error.message});
+  }
+}
+
 
 //ฟังก์ชั่น
 function getQuarter(date) {
@@ -1607,3 +2519,13 @@ const calculatorrate = (num,rate) =>{
   const ratetotal= (num*rate)
   return parseFloat(Math.ceil(ratetotal).toFixed(2))
 }
+
+
+  // ฟังก์ชั่นคำนวณเวลาที่ใช้ในการดีล
+  const caltime = (startdate,enddate) => {
+    const date1 = new Date(startdate);
+    const date2 = new Date(enddate);
+    const diffTime = Math.abs(date1 - date2);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  }; 

@@ -14,6 +14,15 @@ module.exports.getall = async (req, res) => {
         {path:'customer_id'},
         {path:'user_id'},
       ]
+    })
+    .populate({
+      path:'invoiceid',
+      populate:[
+        {path:'customer_id'},
+        {path:'sale_id'},
+        {path:'account_id'},
+        {path:'contact_id'}
+      ]
     });
     
     if (!orderdata) {

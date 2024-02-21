@@ -83,6 +83,11 @@ app.use(prefix+"/supplierimporttax",require("./routes/supplier/supplierimporttax
 app.use(prefix+"/suppliershipping",require("./routes/supplier/suppliershipping"))
 //เคลมสินค้า
 app.use(prefix+"/insurance",require("./routes/Insurance/Insurance"))
+// ใบแจ้งหนี้ และ วางบิล
+app.use(prefix+"/invoice",require("./routes/invoice/invoice"))
+
+// เงินกู้
+app.use(prefix+"/loan",require("./routes/loan/loan"))
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); // หรือกำหนด origin ที่เฉพาะเจาะจง

@@ -37,6 +37,11 @@ const orderSchema = new mongoose.Schema(
     date_delivery:{type:Date,default:null},
     date_customer_delivery:{type:Date,default:null},
     deliverycustomerstatus:{type:Boolean,default:false},
+
+
+    //ใบแจ้งหนี้และวางบิล
+    invoiceid:{type: mongoose.Schema.Types.ObjectId,ref:'invoice',default:null},
+    invoicesendstatus:{type:Boolean,default:false},
   },
   {timestamps: true} 
 );

@@ -168,7 +168,7 @@ module.exports.accept = async (req, res) => {
     if(checkstatusorder.length == 0){
 
       const order = await Order.findById(purchaseorderdata?.order_id);
-      const editdata = await Order.findByIdAndUpdate(purchaseorderdata?.order_id,{ status:"รอการจัดส่งสินค้า"},{new:true})
+      const editdata = await Order.findByIdAndUpdate(purchaseorderdata?.order_id,{ status:"รอทำใบแจ้งหนี้และวางบิล",deliverystatus:true},{new:true})
     }
 
     

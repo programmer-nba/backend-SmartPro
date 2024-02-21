@@ -19,4 +19,21 @@ router.post("/getreportsale",auth.all,Report.reportsaleall)
 router.post("/getdashboardadmin",auth.all,Report.dashboardadmin);
 // dashboard sale
 router.post("/getdashboardsale/",auth.all,Report.dashboardsale);
+
+//report การส่งของสินค้าให้ลูกค้า
+router.post("/reportdelivery",auth.all,Report.reportdelivery);
+//report สินค้าค้างสต็อก
+router.post("/reportstock",auth.all,Report.reportstock);
+
+//report supplier
+router.post("/reportsupplier",auth.all,Report.reportsupplier);
+
+//report  กำไรและค่าใช้จ่าย
+router.post("/reportprofit",auth.all,Report.reportprofit);
+
+//report สรุปยอดขายวางบิล
+router.post("/reportbill",auth.all,Report.reportinvoice);
+
+//report กำไร -ขาดทุน  และ ค่าภาษีนำเข้า
+router.post("/reportprofitloss",auth.all,Report.reportprofitandloss);
 module.exports = router;
