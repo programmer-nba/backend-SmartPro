@@ -75,6 +75,8 @@ app.use(prefix+'/typelndustry',require("./routes/customer/typeIndustry"))
 app.use(prefix+'/contactcustomer',require("./routes/customer/contactcustomer"))
 //รีพอร์ท 
 app.use(prefix+'/report',require("./routes/report/report"))
+//รีพอร์ท กำไร ยอดขาย
+app.use(prefix+'/report/costAndprofit',require("./routes/report/report.Cost.profit"))
 //ค่าคอมมิสชั่น
 app.use(prefix+'/commission',require("./routes/information/commission"))
 //ภาษีนำเข้าของ supplier
