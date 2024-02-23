@@ -163,13 +163,7 @@ module.exports.accept = async (req, res) => {
       }]
     }
     const edit = await Purchaseorder.findByIdAndUpdate(id,data,{new:true})
-    const checkstatusorder = await Purchaseorder.find({order_id:purchaseorderdata?.order_id,statusapprove:false })
     
-    if(checkstatusorder.length == 0){
-
-      const order = await Order.findById(purchaseorderdata?.order_id);
-      const editdata = await Order.findByIdAndUpdate(purchaseorderdata?.order_id,{ status:"รอทำใบแจ้งหนี้และวางบิล",deliverystatus:true},{new:true})
-    }
 
     
     return res.status(200).send({status: true,message: "ใบสั่งซื้อได้รับการอนุมัติแล้ว",data: edit});
@@ -209,7 +203,7 @@ module.exports.productshipped = async (req,res) =>{
     if(checkstatusorder.length == 0){
 
       const order = await Order.findById(edit?.order_id); 
-      const editdata = await Order.findByIdAndUpdate(edit?.order_id,{ status:"รอจัดส่งให้ลูกค้า",deliverystatus:true},{new:true})
+      const editdata = await Order.findByIdAndUpdate(edit?.order_id,{ status:"รอทำใบแจ้งหนี้และวางบิล",deliverystatus:true},{new:true})
     }
 
     return res.status(200).send({ status: true,message:"คุณได้รับสินค้าแล้ว", data: edit });
