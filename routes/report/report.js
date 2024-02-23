@@ -36,4 +36,23 @@ router.post("/reportbill",auth.all,Report.reportinvoice);
 
 //report กำไร -ขาดทุน  และ ค่าภาษีนำเข้า
 router.post("/reportprofitloss",auth.all,Report.reportprofitandloss);
+
+//report Cash Flow 
+router.post("/reportcashflow",auth.all,Report.reportcashflow);
+
+
+//report กำไร -ขาดทุน  และ ค่าภาษีนำเข้า
+router.post("/reportprofitlossaccount",auth.all,Report.reportprofitandloss);
+
+//dashboard  Procurement Department
+router.post("/getdashboardprocurement",auth.all,Report.dashboardprocurement);
+
+//dashboard  Logistic & Shipping Department
+router.post("/getdashboardlogistic",auth.all,Report.dashboardlogistic);
+
+//dashboard  Account Department
+router.post("/getdashboardaccount",auth.all,Report.dashboardaccount);
+
+
+
 module.exports = router;

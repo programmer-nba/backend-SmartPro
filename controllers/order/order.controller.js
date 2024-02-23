@@ -299,6 +299,7 @@ module.exports.delivery = async (req,res)=>{
       return res.status(200).send({ status: false, message: "ไม่มีข้อมูลOrder" });
     }
     const data ={
+      logistic_id:req.body.logistic_id,
       date_delivery:req.body.date_delivery,
       status:"จัดส่งให้กับลูกค้าแล้ว",
 

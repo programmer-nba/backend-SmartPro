@@ -91,6 +91,12 @@ app.use(prefix+"/invoice",require("./routes/invoice/invoice"))
 // เงินกู้
 app.use(prefix+"/loan",require("./routes/loan/loan"))
 
+// บัญชีธนาคารที่วางบิล
+app.use(prefix+"/billingaccount",require("./routes/information/billingaccount"))
+
+//เพิ่มลายเซ็นผู้ลงนาม
+app.use(prefix+"/signatureauthorized",require("./routes/information/signatureauthorized"))
+
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); // หรือกำหนด origin ที่เฉพาะเจาะจง
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');

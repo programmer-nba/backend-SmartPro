@@ -122,6 +122,33 @@ const adminandmanager = async (req,res,next) =>{
         return res.status(500).send({error:err})
     }
 }
+
+//Report & Analysis
+const report = async (req,res,next) =>{
+    try{
+
+        let token = req.headers["token"]
+        const secretKey = "i#ngikanei;#aooldkhfa'"
+        //เช็ค token
+        if(!token){
+            return res.status(403).send({status:false,message:'ไม่มี token'});
+        }
+
+        // ทำการยืนยันสิทธิ์ token
+        const decoded =  jwt.verify(token,secretKey)
+        if(decoded.position ==="Report & Analysis"){
+            req.users = decoded.data
+            next();
+        }
+        else{
+            res.status(400).send({status:false,message:"คุณไม่มีสิทธิ่ในการใช้งาน"})
+        }
+
+    }catch (err){
+        return res.status(500).send({error:err})
+    }
+}
+
 // Account Department
 const account = async (req,res,next) =>{
     try{
@@ -198,6 +225,7 @@ const authuser = {
     procurement,
     account,
     logistic,
+    report,
     all
 };
 
