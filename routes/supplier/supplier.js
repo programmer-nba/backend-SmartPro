@@ -4,7 +4,7 @@ const Supplier = require("../../controllers/supplier/supplier.controller")
 const auth = require("../../authentication/userAuth")
 
 //เพิ่ม supplier
-router.post('/',auth.sales,Supplier.add)
+router.post('/',auth.all,Supplier.add)
 
 //ดึงข้อมูลทั้งหมด
 router.get('/',auth.all,Supplier.getall)
@@ -13,7 +13,7 @@ router.get('/',auth.all,Supplier.getall)
 router.get('/byid/:id',auth.all,Supplier.getbyid)
 
 // แก้ไขข้อมูล supplier 
-router.put('/:id',auth.sales,Supplier.edit)
+router.put('/:id',auth.all,Supplier.edit)
 
 // ลบข้อมูล supplier
 router.delete('/:id',auth.sales,Supplier.delete)
