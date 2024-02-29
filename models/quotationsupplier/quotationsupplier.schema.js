@@ -13,7 +13,9 @@ const quotationsupplierSchema = new mongoose.Schema(
     remark:{type:String,default:""}, //(หมายเหตุ)
     supplier_id:{type: mongoose.Schema.Types.ObjectId,ref:'supplier'}, // (รหัสซัพพลาย)
     filequotation:{type:String,default:""},
-    fileemail:{type:String,default:""}
+    fileemail:{type:String,default:""},
+    warranty:{type:String,default:""}, //ประกัน
+    confirmprice:{type:String,default:""}, //ระยะเวลายืนยันราคา
   },
   {timestamps: true}
 );

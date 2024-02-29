@@ -23,7 +23,31 @@ module.exports.getall = async (req, res) => {
         {path:'account_id'},
         {path:'contact_id'}
       ]
-    });
+    }).populate({
+      path:'purchaseorder._id',
+      populate:[
+        {path:'supplier_id'},
+        {path:'sale_id'},
+        {path:'procurement_id'}
+      ]
+    }).populate(
+      {
+        path:'compareprice_id',
+        populate:[
+          {path:'supplier1'},
+          {path:'supplier2'},
+          {path:'supplier3'},
+          {path:'supplier4'},
+          {path:'supplier5'},
+          {path:'supplier6'},
+          {path:'supplierpro1'},
+          {path:'supplierpro2'},
+          {path:'supplierpro3'},
+          {path:'supplierpro4'},
+          {path:'supplierpro5'},
+          {path:'supplierpro6'},
+        ]
+      })
     
     if (!orderdata) {
       return res.status(404).send({ status: false, message: "ไม่มีข้อมูลออเดอร์" });
@@ -41,7 +65,24 @@ module.exports.getbyid = async (req, res) => {
     .populate('customer_id')
     .populate('contact_id')
     .populate('sale_id')
-    .populate('quotation_id');
+    .populate('quotation_id').populate(
+      {
+        path:'compareprice_id',
+        populate:[
+          {path:'supplier1'},
+          {path:'supplier2'},
+          {path:'supplier3'},
+          {path:'supplier4'},
+          {path:'supplier5'},
+          {path:'supplier6'},
+          {path:'supplierpro1'},
+          {path:'supplierpro2'},
+          {path:'supplierpro3'},
+          {path:'supplierpro4'},
+          {path:'supplierpro5'},
+          {path:'supplierpro6'},
+        ]
+      });
     if (!orderdata) {
       return res.status(404).send({ status: false, message: "ไม่มีข้อมูลOrder" });
     }
@@ -75,6 +116,29 @@ module.exports.addorder =  async (req,res)=>{
       return res.status(500).send({ status: false, error: error.message });
       
     }
+}
+
+module.exports.editorder = async (req, res) => { 
+  try{
+
+    const id = req.params.id
+    const orderdata = await Order.findById(id);
+    if (!orderdata) {
+        return res.status(404).send({ status: false, message: "ไม่มีข้อมูลOrder" });
+    }
+    const data = {
+      customer_id:req.body.customer_id,
+      contact_id:req.body.contact_id,
+      sale_id :req.body.sale_id,
+      requested_products :req.body.requested_products,
+    }
+    const edit = await Order.findByIdAndUpdate(id,data,{new:true})
+    return res.status(200).send({status: true,message: "คุณได้แก้ไขข้อมูล Order เรียบร้อย",data: edit});
+    
+  }catch (error){ 
+    return res.status(500).send({ status: false, error: error.message });
+  
+  }
 }
 
 
@@ -331,6 +395,42 @@ module.exports.customercheck = async (req,res)=>{
     return res.status(500).send({ status: false, error: error.message });
   }
 }
+
+//ดึงข้อมูล by sale_id
+module.exports.getbysaleid = async (req, res) => {
+  try {
+    const orderdata = await Order.find({ sale_id: req.params.id })
+    .populate('customer_id')
+    .populate('contact_id')
+    .populate('sale_id')
+    .populate('quotation_id').populate(
+      {
+        path:'compareprice_id',
+        populate:[
+          {path:'supplier1'},
+          {path:'supplier2'},
+          {path:'supplier3'},
+          {path:'supplier4'},
+          {path:'supplier5'},
+          {path:'supplier6'},
+          {path:'supplierpro1'},
+          {path:'supplierpro2'},
+          {path:'supplierpro3'},
+          {path:'supplierpro4'},
+          {path:'supplierpro5'},
+          {path:'supplierpro6'},
+        ]
+      });
+    if (!orderdata) {
+      return res.status(404).send({ status: false, message: "ไม่มีข้อมูลOrder" });
+    }
+    return res.status(200).send({ status: true, data: orderdata });
+  } catch (error) {
+    return res.status(500).send({ status: false, error: error.message });
+  }
+};
+
+
 
 // //แก้ไขข้อมูล order
 // module.exports.edit = async (req, res) => {

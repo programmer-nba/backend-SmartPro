@@ -12,7 +12,7 @@ const verifyTokenadmin = async(req, res, next)=>{
 
         // ทำการยืนยันสิทธิ์ token
         const decoded =  jwt.verify(token,secretKey)
-        if(decoded.position ==="admin"){
+        if(decoded.position ==="admin" || decoded.position ==="Manager Department" ){
             req.users = decoded.data
             next();
         }else{
@@ -37,7 +37,7 @@ const sales = async (req,res,next) =>{
 
         // ทำการยืนยันสิทธิ์ token
         const decoded =  jwt.verify(token,secretKey)
-        if(decoded.position ==="Sales Department"){
+        if(decoded.position ==="Sales Department" || decoded.position ==="Manager Department"){
             req.users = decoded.data
             next();
         }else{
@@ -62,7 +62,7 @@ const procurement = async (req,res,next) =>{
 
         // ทำการยืนยันสิทธิ์ token
         const decoded =  jwt.verify(token,secretKey)
-        if(decoded.position ==="Procurement Department" ||decoded.position ==="Logistic & Shipping Department"){
+        if(decoded.position ==="Procurement Department" || decoded.position ==="Logistic & Shipping Department" || decoded.position ==="Manager Department"){
             req.users = decoded.data
             next();
         }else{
@@ -136,7 +136,7 @@ const report = async (req,res,next) =>{
 
         // ทำการยืนยันสิทธิ์ token
         const decoded =  jwt.verify(token,secretKey)
-        if(decoded.position ==="Report & Analysis"){
+        if(decoded.position ==="Report & Analysis" || decoded.position ==="Manager Department"){
             req.users = decoded.data
             next();
         }
@@ -161,7 +161,7 @@ const account = async (req,res,next) =>{
         }
          // ทำการยืนยันสิทธิ์ token
          const decoded =  jwt.verify(token,secretKey)
-         if(decoded.position ==="Account Department"){
+         if(decoded.position ==="Account Department" || decoded.position ==="Manager Department"){
              req.users = decoded.data
              next();
          }else{
@@ -185,7 +185,7 @@ const logistic = async (req,res,next) =>{
         }
          // ทำการยืนยันสิทธิ์ token
          const decoded =  jwt.verify(token,secretKey)
-         if(decoded.position ==="Logistic & Shipping Department"){
+         if(decoded.position ==="Logistic & Shipping Department" || decoded.position ==="Manager Department"){
              req.users = decoded.data
              next();
          }else{

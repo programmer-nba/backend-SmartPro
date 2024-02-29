@@ -5,6 +5,8 @@ const auth = require("../../authentication/userAuth")
 
 //เพิ่มผู้ติดต่อ
 router.post('/',auth.sales,contactcustomer.add)
+//เพิ่มผู้ติดต่อจาก excel
+router.post('/excel',auth.sales,contactcustomer.addexcel)
 
 //ดึงข้อมูลทั้งหมด
 router.get('/',auth.all,contactcustomer.getall)
@@ -20,5 +22,10 @@ router.put('/:id',auth.sales,contactcustomer.edit)
 
 //ลบข้อมูลผู้ติดต่อ
 router.delete('/:id',auth.sales,contactcustomer.delete)
+
+//ดึงข้อมูล by sale_id
+
+//ห้ามใช้ //เพิ่มข้อมูลเซลล์ที่เป็นคนเพิ่ม แต่ใช้แล้วจะ ลูกค้า ทุกคน จะเพิ่มด้วย แล้วเซลล์ที่ใช้ใน id
+// router.post('/addsales',contactcustomer.edit_sale_id)
 
 module.exports = router;

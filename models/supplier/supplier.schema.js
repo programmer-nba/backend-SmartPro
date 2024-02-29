@@ -13,7 +13,9 @@ const supplierSchema = new mongoose.Schema(
     contact:{type:String,required:true}, //(ผู้ติดต่อ)
     website:{type:String,required:true}, //(เว็บไซต์)
     taxid:{type:String,required:true,unique: true},
-    remake:{type:String}
+    remake:{type:String},
+    user_id:{type: mongoose.Schema.Types.ObjectId,ref:'user',default:null},
+    secret:{type:Boolean,default:false} 
   },
   {timestamps: true}
 );

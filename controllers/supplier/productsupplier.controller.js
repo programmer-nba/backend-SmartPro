@@ -27,6 +27,7 @@ module.exports.add = async (req, res) => {
     return res.status(500).send({ status: false, error: error.message });
   }
 };
+
 module.exports.addmany = async (req, res) => {
   try {
     const supplier_id = req.params.id
@@ -107,3 +108,5 @@ module.exports.delete = async (req, res) => {
     return res.status(500).send({ status: false, error: error.message });
   }
 };
+
+

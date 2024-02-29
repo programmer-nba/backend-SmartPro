@@ -89,6 +89,60 @@ module.exports.add = async (req, res) => {
   }
 };
 
+module.exports.addexcel = async (req, res) => {
+  try {
+ 
+      if (req.body.username === undefined || req.body.username === "") {
+        return res.status(400).send({ status: false, message: "กรุณากรอก username" });
+      }
+      if (req.body.password === undefined || req.body.password === "") {
+        return res.status(400).send({ status: false, message: "กรุณากรอก password" });
+      }
+      if (req.body.firstname === undefined || req.body.firstname === "") {
+        return res.status(400).send({ status: false, message: "กรุณากรอก firstname" });
+      }
+      if (req.body.lastname === undefined || req.body.lastname === "") {
+        return res.status(400).send({ status: false, message: "กรุณากรอก lastname" });
+      }
+      if (req.body.nickname === undefined || req.body.nickname === "") {
+        return res.status(400).send({ status: false, message: "กรุณากรอก nickname" });
+      }
+      if (req.body.position === undefined || req.body.position === "") {
+        return res.status(400).send({ status: false, message: "กรุณากรอก position" });
+      }
+      //หาว่า user ซ้ำกันไหม
+      const user = await User.findOne({username:req.body.username})
+      if(user)
+      { 
+        return res.status(409).send({ status: false, message: "username นี้มีคนใช้แล้ว" });
+      }
+
+      const data = new User({
+        username: req.body.username,
+        password: bcrypt.hashSync(req.body.password, 10),
+        firstname: req.body.firstname,
+        lastname: req.body.lastname,
+        nickname: req.body.nickname,
+        position: req.body.position,
+        telephone:req.body.telephone,
+        email: req.body.email,
+      });
+      
+      const add = await data.save();
+      return res
+        .status(200)
+        .send({
+          status: true,
+          message: "คุณได้สร้างไอดี user เรียบร้อย",
+          data: add,
+        });
+    
+    ////
+  } catch (error) {
+    return res.status(500).send({ status: false, error: error.message });
+  }
+};
+
 //ดึงข้อมูลทั้งหมด
 module.exports.getall = async (req, res) => {
   try {
@@ -213,6 +267,56 @@ module.exports.delete = async (req, res) => {
     return res
       .status(200)
       .send({ status: true, message: "ลบข้อมูลสำเร็จ", data: deleteuser });
+  } catch (error) {
+    return res.status(500).send({ status: false, error: error.message });
+  }
+};
+
+
+//เพิ่มรายเซ็นต์ของทุก user
+module.exports.addsignature = async (req, res) => {
+  try {
+    let upload = multer({ storage: storage }).array("signature", 20);
+    upload(req, res, async function (err) {
+    
+
+      const reqFiles = [];
+      const result = [];
+      if (err) {
+        return res.status(500).send(err);
+      }
+      let signature = '' // ตั้งตัวแปรรูป
+      //ถ้ามีรูปให้ทำฟังก์ชั่นนี้ก่อน
+      if (req.files) {
+        //เช็คก่อนว่ามี user ไหม
+        const user = await User.findOne({_id:req.params.id})
+        if(!user)
+        {
+            return res.status(400).send({ status: false, message: "ไม่มีข้อมูล user" });
+        }else{
+          if(user.signature !='')
+          {
+            await deleteFile(user.signature)
+          }
+        }
+
+
+        const url = req.protocol + "://" + req.get("host");
+        for (var i = 0; i < req.files.length; i++) {
+          const src = await uploadFileCreate(req.files, res, { i, reqFiles });
+          result.push(src);
+        
+          //   reqFiles.push(url + "/public/" + req.files[i].filename);
+        }
+        signature = reqFiles[0]
+      }
+
+      const data = {
+        signature: signature,
+      }
+      const edit = await User.findByIdAndUpdate(req.params.id,data,{new:true})
+      return res.status(200).send({status: true,message: "คุณได้เพิ่มรายเซ็นต์ของทุก user เรียบร้อย",data: edit});
+    });
   } catch (error) {
     return res.status(500).send({ status: false, error: error.message });
   }

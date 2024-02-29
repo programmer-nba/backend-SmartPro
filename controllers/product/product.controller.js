@@ -60,6 +60,32 @@ module.exports.add = async (req, res) => {
     return res.status(500).send({ status: false, error: error.message });
   }
 };
+//เพิ่มสินค้าจาก excel
+module.exports.addexcel = async (req, res) => {
+  try {
+  
+      const data = new Product({
+        name:req.body.name, // (ชื่อสินค้า)
+        brand:req.body.brand, //(แบรนด์)
+        model:req.body.model,
+        price:req.body.price,  
+        rate :req.body.rate, // (รหัสซัพพลาย)(เรทเงิน)
+        detail:req.body.detail,
+        quotationsupplier_id:req.body.quotationsupplier_id,
+        supplier_id:req.body.supplier_id, // (รหัสซัพพลาย)
+        producttype:req.body.producttype,
+        unit:req.body.unit
+      });
+      const add = await data.save();
+      return res
+        .status(200)
+        .send({ status: true, message: "คุณได้เพิ่มข้อมูลสินค้า", data: add });
+  
+  } catch (error) {
+    return res.status(500).send({ status: false, error: error.message });
+  }
+};
+
 
 //ดึงข้อมูลทั้งหมด 
 module.exports.getall = async (req, res) => {

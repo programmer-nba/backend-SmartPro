@@ -9,8 +9,11 @@ const orderSchema = new mongoose.Schema(
     contact_id:{type: mongoose.Schema.Types.ObjectId,ref:'contactcustomer',default:null},
     sale_id :{type: mongoose.Schema.Types.ObjectId,ref:'user',default:null},
     requested_products :{type:[{
+      partnumber:{type:String,default:""},
+      serialnumber:{type:String,default:""},
       product_name:{type:String,default:""},
     }],default:null},
+    compareprice_id:{type: mongoose.Schema.Types.ObjectId,ref:'compareprice',default:null},
     quotation_id: {type: mongoose.Schema.Types.ObjectId,ref:'quotation',default:null},
     status:{type:String,default:""},
     //ส่วนการดีลงาน

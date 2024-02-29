@@ -11,8 +11,11 @@ router.get('/',auth.all,Order.getall)
 //ดึงข้อมูล by id
 router.get('/byid/:id',auth.all,Order.getbyid)
 
-// เพิ่มออเดอร์ เมื่อลูกค้าต้องการออเดอร์
+// เพิ่มออเดอร์ เมื่อลูกค้าต้องการออเดอร์x
 router.post("/",auth.sales,Order.addorder);
+// แก้ไขออเดอร์ 
+router.put("/:id",auth.sales,Order.editorder);
+
 
 //ขายงานผ่าน
 router.put("/approve/:id",auth.sales,Order.acceptdeal);
@@ -31,6 +34,10 @@ router.put("/genpo/:id",auth.procurement,Order.genpo);
 router.put("/delivery/:id",auth.procurement,Order.delivery);
 //ลูกค้าตรวจสอบสินค้าแล้ว
 router.put("/customercheck/:id",auth.procurement,Order.customercheck);
+
+//ดึงข้อมูล by sale_id
+router.get('/bysaleid/:id',auth.all,Order.getbysaleid)
+
 
 
 // // ลบข้อมูลออเดอร์

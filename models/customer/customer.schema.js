@@ -14,7 +14,8 @@ const customerSchema = new mongoose.Schema(
     contact:{type:String,required: true}, //(ผู้ติดต่อ)
     website:{type:String,required:true},
     taxcustomerid:{type:String,required:true,unique: true}, // เลขประจำตัวผู้เสียภาษี
-    remark:{type:String}
+    remark:{type:String},
+    sale_id:{type: mongoose.Schema.Types.ObjectId,ref:'user',default:null}
   },
   {timestamps: true}
 );

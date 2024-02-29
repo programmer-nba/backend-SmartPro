@@ -26,6 +26,32 @@ module.exports.add = async (req, res) => {
   }
 };
 
+//เพิ่มผุ้ติดต่อลูกค้าจาก excel
+module.exports.addexcel = async (req, res) => {
+  try {
+    const {name,nickname,department,position,telephone,mobile,email,lineid,facebookid,dateofbirth,remark,customer_id} = req.body
+    const data = new Contactcustomer({
+        name:name, //(ชื่อจริง)
+        nickname:nickname, // ชื่อเล่น
+        department:department,
+        position:position,
+        telephone:telephone,
+        mobile:mobile,
+        email:email,
+        lineid:lineid,
+        facebookid:facebookid,
+        dateofbirth:dateofbirth,
+        remark:remark,
+        customer_id:customer_id,
+      });
+      const add = await data.save();
+      return res.status(200).send({status: true,message:"คุณได้เพิ่มข้อมูลผุ้ติดต่อลูกค้า",data: add});
+ 
+  } catch (error) {
+    return res.status(500).send({ status: false, error: error.message });
+  }
+};
+
 //ดึงข้อมูลทั้งหมด
 module.exports.getall = async (req, res) => {
   try {
@@ -111,3 +137,18 @@ module.exports.delete = async (req, res) => {
     return res.status(500).send({ status: false, error: error.message });
   }
 };
+
+//ห้ามใช้//เพิ่มข้อมูลเซลล์ที่เป็นคนเพิ่ม แต่ใช้แล้วจะ ลูกค้า ทุกคน จะเพิ่มด้วย แล้วเซลล์ที่ใช้ใน id
+// module.exports.edit_sale_id = async (req, res) => {
+//   try {
+//     const sale_id = req.body.sale_id
+//     const customer_id = req.body.customer_id
+//     const data = {
+//       sale_id:sale_id
+//     };
+//     const edit = await Contactcustomer.updateMany({sale:undefined},data)
+//     return res.status(200).send({status: true,message: "คุณได้แก้ไขข้อมูลเซลล์เรียบร้อย",data: edit});
+//   } catch (error) {
+//     return res.status(500).send({ status: false, error: error.message });
+//   }
+// }

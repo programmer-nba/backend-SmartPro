@@ -15,6 +15,7 @@ const contactcustomerSchema = new mongoose.Schema(
     dateofbirth:{type:Date,dafault:null},
     remark:{type:String},
     customer_id:{type: mongoose.Schema.Types.ObjectId,ref:'customer',default:null},
+    sale_id:{type: mongoose.Schema.Types.ObjectId,ref:'user',default:null},
   },
   {timestamps: true}
 );

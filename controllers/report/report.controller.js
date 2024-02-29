@@ -829,7 +829,7 @@ module.exports.reportpriceyear = async (req,res)=>{
     
     const yearlyData = {};
     
-    currentdata.forEach((item) => {
+  currentdata.forEach((item) => {
   const createdAt = new Date(item.createdAt);
   const year = createdAt.getFullYear();
 

@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema(
     telephone:{type:String},
     image:{type:String,default:null}, // รูปภาพ
     email:{type:String,default:""},
+    signature:{type:String,default:null}, // ลายเซ็น
   },
   {timestamps: true}
 );

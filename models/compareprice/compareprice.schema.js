@@ -3,31 +3,38 @@ const mongoose = require("mongoose");
 // Define the schema for the HotelUser entity
 const comparepriceSchema = new mongoose.Schema(
   { 
-    customer_id:{type: mongoose.Schema.Types.ObjectId,ref:'customer',required:true} ,//(ชื่อลูกค้า)
-    user_id:{type: mongoose.Schema.Types.ObjectId,ref:'user',required:true},//(รหัสSales Department )
-    refno:{type:String,default:""}, //(เลขที่เอกสาร)
-    date :{type:Date,default:Date.now()}, //(วันที่ลงเอกสาร)
-    productdetail:{type:[{
-        type_id: {type: mongoose.Schema.Types.ObjectId,ref:'type'},
-        type_name:{type:String},
-        product:{type:[
-          {
-            product_id: {type: mongoose.Schema.Types.ObjectId,ref:'product'},
-            product_name:{type:String},
-            price:{type:Number},
-            rate:{type: mongoose.Schema.Types.ObjectId,ref:'rate'},
-            rate_name: {type:String,default:""},
-            rate_rateprice: {type:Number,default:0},
-            rate_symbol: {type:String,default:""},
-            supplier_id:{type: mongoose.Schema.Types.ObjectId,ref:'supplier'},
-            supplier_name:{type:String}
-          }
-        ]}
-    }],default:""},
-    rate:{type: mongoose.Schema.Types.ObjectId,ref:'rate',default:null},
-    ratename:{type:String,default:""},
-    rateprice:{type:Number,default:0},
-    ratesymbol: {type:String,default:""},    
+    order_id:{type:mongoose.Schema.Types.ObjectId,ref:"order"},
+    sale_id:{type:mongoose.Schema.Types.ObjectId,ref:"user"},
+    supplier1:{type:mongoose.Schema.Types.ObjectId,ref:"supplier",default:null},
+    salecompareprice1:{type:Array,default:[]},
+    supplier2:{type:mongoose.Schema.Types.ObjectId,ref:"supplier",default:null},
+    salecompareprice2:{type:Array,default:[]},
+    supplier3:{type:mongoose.Schema.Types.ObjectId,ref:"supplier",default:null},
+    salecompareprice3:{type:Array,default:[]},
+    supplier4:{type:mongoose.Schema.Types.ObjectId,ref:"supplier",default:null},
+    salecompareprice4:{type:Array,default:[]},
+    supplier5:{type:mongoose.Schema.Types.ObjectId,ref:"supplier",default:null},
+    salecompareprice5:{type:Array,default:[]},
+    supplier6:{type:mongoose.Schema.Types.ObjectId,ref:"supplier",default:null},
+    salecompareprice6:{type:Array,default:[]},
+
+    selectproduct:{type:Array,default:[]},
+
+
+    procurement_id:{type:mongoose.Schema.Types.ObjectId,ref:"user",default:null},
+    supplierpro1:{type:mongoose.Schema.Types.ObjectId,ref:"supplier",default:null},
+    procurementcompareprice1:{type:Array,default:[]},
+    supplierpro2:{type:mongoose.Schema.Types.ObjectId,ref:"supplier",default:null},
+    procurementcompareprice2:{type:Array,default:[]},
+    supplierpro3:{type:mongoose.Schema.Types.ObjectId,ref:"supplier",default:null},
+    procurementcompareprice3:{type:Array,default:[]},
+    supplierpro4:{type:mongoose.Schema.Types.ObjectId,ref:"supplier",default:null},
+    procurementcompareprice4:{type:Array,default:[]},
+    supplierpro5:{type:mongoose.Schema.Types.ObjectId,ref:"supplier",default:null},
+    procurementcompareprice5:{type:Array,default:[]},
+    supplierpro6:{type:mongoose.Schema.Types.ObjectId,ref:"supplier",default:null},
+    procurementcompareprice6:{type:Array,default:[]},
+
   },
   {timestamps: true}
 );

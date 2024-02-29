@@ -35,7 +35,7 @@ module.exports.add = async (req, res) => {
         }
         image = reqFiles[0];
       }
-      let { quotationnumber,originproducts,order_code,delivery,dateoffer,payment,remark,supplier_id} = req.body;
+      let { quotationnumber,originproducts,order_code,delivery,dateoffer,payment,remark,supplier_id,warranty,confirmprice} = req.body;
       
       const data = new Quotationsupplier({
         quotationnumber :quotationnumber, //(เลขใบที่ซัพพลายเออร์ไปให้)
@@ -47,7 +47,9 @@ module.exports.add = async (req, res) => {
         remark:remark, //(หมายเหตุ)
         supplier_id:supplier_id, // (รหัสซัพพลาย)
         filequotation:"",
-        fileemail:""
+        fileemail:"",
+        warranty:warranty, //ประกัน
+        confirmprice:confirmprice, //ระยะเวลายืนยันราคา
       });
       const add = await data.save();
       return res
@@ -59,6 +61,32 @@ module.exports.add = async (req, res) => {
   }
 };
 
+//เพิ่มใบเสนอราคาของซัพพลายเออร์ จาก excel 
+module.exports.addexcel = async (req, res) => {
+  try {
+    let { quotationnumber,originproducts,order_code,delivery,dateoffer,payment,remark,supplier_id,warranty,confirmprice} = req.body;
+      
+    const data = new Quotationsupplier({
+      quotationnumber :quotationnumber, //(เลขใบที่ซัพพลายเออร์ไปให้)
+      originproducts:originproducts,
+      order_code:order_code, //(เลขรหัสออเดอร์ใบเสนอราคาจากซัพพลายเออร์)
+      delivery:delivery, //  (เวลาในการจัดส่ง)
+      dateoffer:dateoffer, // (วันที่เสนอไป)
+      payment :payment,//(การจ่ายเงิน)
+      remark:remark, //(หมายเหตุ)
+      supplier_id:supplier_id, // (รหัสซัพพลาย)
+      warranty:warranty, //ประกัน
+      confirmprice:confirmprice, //ระยะเวลายืนยันราคา
+    });
+    const add = await data.save();
+    return res
+      .status(200)
+      .send({ status: true, message: "คุณได้เพิ่มข้อมูลใบเสนอราคาซัพพลายเออร์", data: add });
+ 
+  } catch (error) {
+    return res.status(500).send({ status: false, error: error.message });
+  }
+};
 //ดึงข้อมูลทั้งหมด
 module.exports.getall = async (req, res) => {
   try {
@@ -168,7 +196,7 @@ module.exports.edit = async (req, res) => {
       {
           await deleteFile(quotationsupplierdata.image)
       }
-      let { quotationnumber,originproducts,order_code,delivery,dateoffer,payment,remark,supplier_id} = req.body;
+      let { quotationnumber,originproducts,order_code,delivery,dateoffer,payment,remark,warranty,confirmprice} = req.body;
       const data = {
         quotationnumber :quotationnumber, //(เลขใบที่ซัพพลายเออร์ไปให้)
         originproducts:originproducts,
@@ -177,6 +205,8 @@ module.exports.edit = async (req, res) => {
         dateoffer:dateoffer, // (วันที่เสนอไป)
         payment :payment,//(การจ่ายเงิน)
         remark:remark, //(หมายเหตุ)
+        warranty:warranty, //ประกัน
+        confirmprice:confirmprice, //ระยะเวลายืนยันราคา
       }
     const edit = await Quotationsupplier.findByIdAndUpdate(id, data, { new: true });
     return res
@@ -383,7 +413,8 @@ module.exports.getbysupplierproduct = async (req, res) => {
       dateoffer: item.dateoffer,
       payment: item.payment,
       remark: item.remark,
-     
+      warranty: item.warranty,
+      confirmprice: item.confirmprice,
       supplier_id: {
         _id: item.supplier_id._id,
         name: item.supplier_id.name,
