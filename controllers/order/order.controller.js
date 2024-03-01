@@ -65,7 +65,29 @@ module.exports.getbyid = async (req, res) => {
     .populate('customer_id')
     .populate('contact_id')
     .populate('sale_id')
-    .populate('quotation_id').populate(
+    .populate({
+      path:'quotation_id',
+      populate:[
+        {path:'customer_id'},
+        {path:'user_id'},
+      ]
+    })
+    .populate({
+      path:'invoiceid',
+      populate:[
+        {path:'customer_id'},
+        {path:'sale_id'},
+        {path:'account_id'},
+        {path:'contact_id'}
+      ]
+    }).populate({
+      path:'purchaseorder._id',
+      populate:[
+        {path:'supplier_id'},
+        {path:'sale_id'},
+        {path:'procurement_id'}
+      ]
+    }).populate(
       {
         path:'compareprice_id',
         populate:[
@@ -82,7 +104,7 @@ module.exports.getbyid = async (req, res) => {
           {path:'supplierpro5'},
           {path:'supplierpro6'},
         ]
-      });
+      })
     if (!orderdata) {
       return res.status(404).send({ status: false, message: "ไม่มีข้อมูลOrder" });
     }

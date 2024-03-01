@@ -26,4 +26,9 @@ router.put("/admin/accept/:id",auth.adminandmanager,purchaseorder.accept);
 router.put("/shipping/:id",auth.procurement,purchaseorder.productshipped);
 router.put("/imageproduct/:id",auth.procurement,purchaseorder.imageproduct);
 router.put("/file/:id",auth.procurement,purchaseorder.file);
+
+
+//เพิ่มใบสั่งซื้อสินค้าจาก ใบเปรียบเทียบราคา
+router.post("/fromcompare",auth.procurement,purchaseorder.createpo)
+
 module.exports = router;

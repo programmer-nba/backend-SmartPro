@@ -13,7 +13,7 @@ const purchaseorderSchema = new mongoose.Schema(
     productdetail:{type:[{
         product_id :{type: mongoose.Schema.Types.ObjectId,ref:'product'}, //(ข้อมูลสินค้า)
         product_name:{type:String}, // (ชื่อสินค้า)
-        brand: {type: mongoose.Schema.Types.ObjectId,ref:'brand'},
+        brand: {type:String},
         image:{type:String},
         quantity:{type:Number},//(จำนวน)
         price :{type:Number},

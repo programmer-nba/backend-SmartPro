@@ -326,3 +326,102 @@ module.exports.file = async (req,res)=>{
     return res.status(500).send({ status: false, error: error.message });
   }
 }
+
+
+
+// สร้างใบ po จากใบเปรียบเทียบราคา
+module.exports.createpo = async (req,res)=>{
+  try{
+      const selectproduct = req.body.selectproduct;
+      
+      const order_id = req.body.order_id;
+      const procurement_id = req.body.procurement_id;
+      const order = await Order.findById(order_id).populate('quotation_id');
+      if(order == undefined){
+        return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบสั่งซื้อนี้" });
+      }
+      const supplier_id  =[];
+      selectproduct.forEach(async (element) => {
+        const find = supplier_id.findIndex(items=>JSON.parse(JSON.stringify(items?.supplier_id)) ==JSON.parse(JSON.stringify(element?.supplier_id?._id)));
+        
+        if(find ==-1){
+          supplier_id.push({supplier_id:element.supplier_id._id})
+        }
+      });
+
+      supplier_id.forEach(async (element) => {
+        const startDate = new Date(new Date().setHours(0, 0, 0, 0)); // เริ่มต้นของวันนี้
+        const endDate = new Date(new Date().setHours(23, 59, 59, 999)); // สิ้นสุดของวันนี้
+        endDate.setDate(endDate.getDate() + 1);
+        // ปรับเวลาให้เป็นเริ่มต้นของวัน
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(0, 0, 0, 0);
+        const purchaseorderprice = await Purchaseorder.find({
+            createdAt: {
+              $gte: startDate,
+              $lt: endDate
+            }
+          });
+        const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const referenceNumber = String(purchaseorderprice.length).padStart(5, '0')
+        const refno = `PO${currentDate}${referenceNumber}`
+        // ค้นหาสินค้าที่อยู่ ในsupplier นั้น
+        const rateproduct  =  selectproduct.filter(items=>JSON.parse(JSON.stringify(items?.supplier_id?._id)) == JSON.parse(JSON.stringify(element?.supplier_id)))
+        
+        const total = rateproduct.reduce((a, b) => a + (b['price'] || 0), 0)
+        const tax = total * 0.07
+        const alltotal = total + tax
+        
+        const productdetail = [];
+        rateproduct.forEach(async (dataproduct) => {
+          productdetail.push({
+            product_id :dataproduct?._id, //(ข้อมูลสินค้า)
+            product_name:dataproduct?.name, // (ชื่อสินค้า)
+            brand: dataproduct?.brand,
+            image:dataproduct?.image,
+            quantity:dataproduct?.quantity,//(จำนวน)
+            price :dataproduct?.price,
+            unit:dataproduct?.unit,
+            rate: rateproduct[0]?.rate?._id ,
+            rate_name: rateproduct[0]?.rate?.name,
+            rate_rateprice: rateproduct[0]?.rate?.rateprice,
+            rate_symbol: rateproduct[0]?.rate?.symbol,
+            supplier_id:element?.supplier_id,
+	          total:dataproduct?.price * dataproduct?.quantity //(ราคารวมในสินค้า)
+          })
+        })
+      
+        
+        const data = new Purchaseorder({
+          supplier_id: element.supplier_id,
+          sale_id:order.sale_id,
+          procurement_id:procurement_id,
+          quotation_id:order?.quotation_id?._id,
+          order_id: order_id,
+          refno:refno, //(เลขที่เอกสาร)
+          date :Date.now(), //(วันที่ลงเอกสาร)
+          productdetail:productdetail,
+          rate:rateproduct[0]?.rate?._id,
+          ratename:rateproduct[0]?.rate?.name,
+          rateprice:rateproduct[0]?.rate?.rateprice,
+          ratesymbol:rateproduct[0]?.rate?.symbol,
+          total:total,
+          tax:tax,
+          alltotal:alltotal,
+          statusapprove:false,
+          approvedetail:[{status:"รออนุมัติ",date:Date.now()}]
+        });
+        const add = await data.save();
+        order.purchaseorder.push({_id:add._id,refpurchaseorder:refno})
+       
+      });
+      const editdata = await Order.findByIdAndUpdate(order_id,{ purchaseorder:order.purchaseorder},{new:true})
+      return res.status(200).send({status: true,message:"คุณได้เพิ่มข้อมูลใบสั่งซื้อสินค้าแล้ว",data: editdata});
+       
+
+  } catch (error) {
+    return res.status(500).send({ status: false, error: error.message });
+  }
+}
+
+

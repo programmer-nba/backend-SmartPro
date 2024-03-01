@@ -7,8 +7,7 @@ const auth = require("../../authentication/userAuth")
 router.post('/',auth.sales,compareprice.add)
 //แก้ไขใบเปรียบเทียบราคา  ของ sale
 router.put('/:id',auth.sales,compareprice.editsale)
-//เพิ่มใบเปรียบเทียบราคา  ของ procurement
-router.post('/procurement',auth.procurement,compareprice.addpro)
+
 //แก้ไขใบเปรียบเทียบราคา  ของ procurement
 router.put('/procurement/:id',auth.procurement,compareprice.editpro)
 

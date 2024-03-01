@@ -65,34 +65,7 @@ module.exports.editsale = async (req, res) => {
     }
 };
 
-//เพิ่มใบเปรียบเทียบราคา  ของ procurement
-module.exports.addpro = async (req, res) => {
-    try {
-        const order_id = req.params.id;
-        const order = await Order.findOne({ _id: order_id });
-        if (!order) {
-            return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบสั่งซื้อ" });
-        }
-        const data = {
-            supplierpro1:req.body.supplierpro1,
-            procurementcompareprice1:req.body.procurementcompareprice1,
-            supplierpro2:req.body.supplierpro2,
-            procurementcompareprice2:req.body.procurementcompareprice2,
-            supplierpro3:req.body.supplierpro3,
-            procurementcompareprice3:req.body.procurementcompareprice3,
-            supplierpro4:req.body.supplierpro4,
-            procurementcompareprice4:req.body.procurementcompareprice4,
-            supplierpro5:req.body.supplierpro5,
-            procurementcompareprice5:req.body.procurementcompareprice5,
-            supplierpro6:req.body.supplierpro6,
-            procurementcompareprice6:req.body.procurementcompareprice6, 
-            }
-        const edit = await Compareprice.findByIdAndUpdate(id,data,{new:true});
-        return res.status(200).send({status: true,message:"คุณได้เพิ่มข้อมูลใบเปรียบเทียบราคา",data: edit});
-    } catch (error) {
-        return res.status(500).send({ status: false, error: error.message });
-    }
-};
+
 
 //แก้ไขใบเปรียบเทียบราคา  ของ procurement
 module.exports.editpro = async (req, res) => {
@@ -115,8 +88,10 @@ module.exports.editpro = async (req, res) => {
             procurementcompareprice5:req.body.procurementcompareprice5,
             supplierpro6:req.body.supplierpro6,
             procurementcompareprice6:req.body.procurementcompareprice6, 
+            selectproduct:req.body.selectproduct
             }
-        const edit = await Compareprice.findByIdAndUpdate(id,data,{new:true});
+            
+        const edit = await Compareprice.findOneAndUpdate({order_id:order_id},data,{new:true});
         return res.status(200).send({status: true,message:"คุณได้เพิ่มข้อมูลใบเปรียบเทียบราคา",data: edit});
 
     }catch (error) {
