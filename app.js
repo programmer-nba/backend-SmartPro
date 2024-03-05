@@ -97,6 +97,9 @@ app.use(prefix+"/billingaccount",require("./routes/information/billingaccount"))
 //เพิ่มลายเซ็นผู้ลงนาม
 app.use(prefix+"/signatureauthorized",require("./routes/information/signatureauthorized"))
 
+//ใบส่งของ
+app.use(prefix+"/deliverynote",require("./routes/deliverynote/deliverynote"))
+
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); // หรือกำหนด origin ที่เฉพาะเจาะจง
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');

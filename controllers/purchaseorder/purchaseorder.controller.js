@@ -1,5 +1,6 @@
 const Order = require("../../models/order/order.schema");
 const Purchaseorder = require("../../models/purchaseorder/purchaseorder.schema") 
+const Deliverynote = require("../../models/deliverynote/deliverynote.schema")
 
 //เพิ่มใบสั่งซื้อสินค้าเรียบร้อยแล้ว
 module.exports.add = async (req, res) => {
@@ -39,7 +40,11 @@ module.exports.add = async (req, res) => {
         tax:tax, //(หักภาษี 7 %)
         alltotal:alltotal, //(ราคารวมทั้งหมด)
         statusapprove:false,
-        approvedetail:[{status:"รออนุมัติ",date:Date.now()}]
+        approvedetail:[{status:"รออนุมัติ",date:Date.now()}],
+        warrantyproduct:req.body.warrantyproduct,//ระยะเวลารับประกันสินค้า
+        deliveryproduct:req.body.deliveryproduct, //กำหนดการส่งของ
+        paymentproduct:req.body.paymentproduct, //เงื่อนไขการชำระเงิน
+        remake:req.body.remake, //หมายเหตุ
       });
       const add = await data.save();
       const order = await Order.findById(order_id);
@@ -115,6 +120,10 @@ module.exports.edit = async (req, res) => {
         total:total, //(ราคารวมสินค้า)
         tax:tax, //(หักภาษี 7 %)
         alltotal:alltotal, //(ราคารวมทั้งหมด)
+        warrantyproduct:req.body.warrantyproduct,//ระยะเวลารับประกันสินค้า
+        deliveryproduct:req.body.deliveryproduct, //กำหนดการส่งของ
+        paymentproduct:req.body.paymentproduct, //เงื่อนไขการชำระเงิน
+        remake:req.body.remake, //หมายเหตุ
     }
     const edit = await Purchaseorder.findByIdAndUpdate(id,data,{new:true})
     return res.status(200).send({status: true,message: "คุณได้แก้ไขข้อมูลใบสั่งซื้อสินค้าเรียบร้อยแล้วเรียบร้อย",data: edit});
@@ -172,6 +181,40 @@ module.exports.accept = async (req, res) => {
   }
 };
 
+//admin อนุมัติด้วย order
+module.exports.acceptorder = async (req, res) => {
+    try{
+      const order_id = req.params.id;
+      const order = await Order.findById(order_id).populate('purchaseorder');
+      if(order == undefined)
+      {
+        return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบสั่งซื้อนี้" });
+      }
+     order.purchaseorder.forEach(async (element) => {
+      const id = element._id
+      const purchaseorderdata = await Purchaseorder.findOne({_id: id });
+      if (!purchaseorderdata) {
+        return res.status(200).send({ status: false, message: "ไม่มีข้อมูลใบเสนอราคา" });
+      }
+      purchaseorderdata.approvedetail.push({status:"ออกใบสั่งซื้อสำเร็จ",date:Date.now()})
+      const data ={
+        statusapprove:true,
+        approvedetail:purchaseorderdata.approvedetail,
+        shippingdetail:[{
+          status:"รอการจัดส่ง",
+          date:Date.now()
+        }]
+      }
+      const edit = await Purchaseorder.findByIdAndUpdate(id ,data,{new:true})
+
+     });
+     return res.status(200).send({status: true,message: "ใบสั่งซื้อได้รับการอนุมัติแล้ว"});
+
+    }catch (error) {
+      return res.status(500).send({ status: false, error: error.message });
+    }
+}
+
 //สินค้ามาจัดส่งแล้ว
 module.exports.productshipped = async (req,res) =>{
   try{
@@ -183,7 +226,7 @@ module.exports.productshipped = async (req,res) =>{
       return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบสั่งซื้อนี้" });
     }
     const {hscode,importtax,shippingcost,operationcost,serialnumber,dateget,warranty,deliverystatus} = req.body;
-    productshipped?.shippingdetail.push({status:"รอจัดส่งให้ลูกค้า",date:Date.now()})
+    productshipped?.shippingdetail.push({status:"จัดส่งแล้ว",date:Date.now()})
 
     const data ={
       statusshipping:true,
@@ -198,12 +241,50 @@ module.exports.productshipped = async (req,res) =>{
       deliverystatus:deliverystatus,
       shippingdetail:productshipped?.shippingdetail,
     }
-    const edit =await Purchaseorder.findByIdAndUpdate(id,data,{new:true});
+    const edit = await Purchaseorder.findByIdAndUpdate(id,data,{new:true});
     const checkstatusorder = await Purchaseorder.find({order_id:edit?.order_id,statusshipping:false})
     if(checkstatusorder.length == 0){
-
-      const order = await Order.findById(edit?.order_id); 
-      const editdata = await Order.findByIdAndUpdate(edit?.order_id,{ status:"รอทำใบแจ้งหนี้และวางบิล",deliverystatus:true},{new:true})
+      
+      const order = await Order.findById(edit?.order_id).populate('quotation_id'); 
+      const deliverynote = new Deliverynote({
+        customer_id:order?.customer_id,//(ชื่อลูกค้า)
+        contact_id:order?.contact_id,//(ชื่อผู้ติดต่อ)
+        order_id:order?._id, //(รหัสใบสั่งซื้อ)
+        reforder:order?.reforder, //(เลขที่เอกสาร)
+        date :Date.now(), //(วันที่ลงเอกสาร)
+        productdetail: order?.quotation_id?.productdetail,
+        ////
+        rate:order?.quotation_id?.rate,
+        ratename:order?.quotation_id?.ratename,
+        rateprice:order?.quotation_id?.rateprice,
+        ratesymbol:order?.quotation_id?.ratesymbol,
+        ////
+        warranty:order?.quotation_id?.warranty, //ประกัน
+        timeofdelivery: order?.quotation_id?.timeofdelivery ,//กำหนดส่งของ
+        paymentterm :order?.quotation_id?.paymentterm, //เงื่อนไขการชำระเงิน
+        remark:order?.quotation_id?.remark,
+        //
+        total:order?.quotation_id?.total, //(ราคารวมสินค้า)
+        priceprofit:order?.quotation_id?.priceprofit, // ราคา +กำไรแล้ว
+        profitpercent:order?.quotation_id?.profitpercent, // ค่าเปอร์เซ็นต์ดำเนินการ
+        profit:order?.quotation_id?.profit, // กำไร
+        //
+        tax:order?.quotation_id?.tax, //(หักภาษี 7 %)
+        alltotal:order?.quotation_id?.alltotal, //(ราคารวมทั้งหมด)
+        //ส่วนเพิ่มใหม่
+        project: order?.quotation_id?.project,
+        discount:order?.quotation_id?.discount, //เพิ่มเข้ามาใหม่
+        totalprofit:order?.quotation_id?.totalprofit, //กำไรที่ - กับส่วนลดแล้ว
+        ////
+        status:false,
+        statusdetail:[{
+          status:"รออนุมัติ",
+          date:Date.now(),
+        }],
+      })
+      const adddeliverynote = await deliverynote.save();
+      const editdata = await Order.findByIdAndUpdate(edit?.order_id,{ status:"รออนุมัติใบส่งของ",deliverynoteid:adddeliverynote?._id},{new:true})
+      
     }
 
     return res.status(200).send({ status: true,message:"คุณได้รับสินค้าแล้ว", data: edit });
@@ -349,6 +430,7 @@ module.exports.createpo = async (req,res)=>{
         }
       });
 
+      let editdata = order.purchaseorder;
       supplier_id.forEach(async (element) => {
         const startDate = new Date(new Date().setHours(0, 0, 0, 0)); // เริ่มต้นของวันนี้
         const endDate = new Date(new Date().setHours(23, 59, 59, 999)); // สิ้นสุดของวันนี้
@@ -409,13 +491,19 @@ module.exports.createpo = async (req,res)=>{
           tax:tax,
           alltotal:alltotal,
           statusapprove:false,
-          approvedetail:[{status:"รออนุมัติ",date:Date.now()}]
+          approvedetail:[{status:"รออนุมัติ",date:Date.now()}],
+          warrantyproduct:rateproduct[0]?.quotationsupplier_id?.warranty, //ระยะเวลารับประกันสินค้า
+          deliveryproduct:rateproduct[0]?.quotationsupplier_id?.delivery, //กำหนดการส่งของ
+          paymentproduct:rateproduct[0]?.quotationsupplier_id?.payment, //เงื่อนไขการชำระเงิน
+          remake:rateproduct[0]?.quotationsupplier_id?.remake, //หมายเหตุ
+
         });
         const add = await data.save();
         order.purchaseorder.push({_id:add._id,refpurchaseorder:refno})
-       
+        editdata = await Order.findByIdAndUpdate(order_id,{ purchaseorder:order.purchaseorder},{new:true})
       });
-      const editdata = await Order.findByIdAndUpdate(order_id,{ purchaseorder:order.purchaseorder},{new:true})
+     
+      
       return res.status(200).send({status: true,message:"คุณได้เพิ่มข้อมูลใบสั่งซื้อสินค้าแล้ว",data: editdata});
        
 

@@ -10,7 +10,7 @@ const invoiceSchema = new mongoose.Schema(
     sale_id :{type: mongoose.Schema.Types.ObjectId,ref:'user',default:null},
     procurement_id:{type: mongoose.Schema.Types.ObjectId,ref:'user',default:null},
     refno:{type:String,default:""}, //(เลขที่เอกสาร)
-    date :{type:Date,default:Date.now()}, //(วันที่ลงเอกสาร)
+    date :{type:Date,default:null}, //(วันที่ลงเอกสาร)
     productdetail:{type:[{
         product_id :{type: mongoose.Schema.Types.ObjectId,ref:'product'}, //(ข้อมูลสินค้า)
         product_name:{type:String}, // (ชื่อสินค้า)
@@ -52,13 +52,16 @@ const invoiceSchema = new mongoose.Schema(
     timeofdelivery: {type:Date,default:null} ,//กำหนดส่งของ  
     remark:{type:String,default:""},
 
-    stauts:{type:String,default:"รอชำระเงิน"}, 
+    stauts:{type:String}, 
     
     account_id:{type: mongoose.Schema.Types.ObjectId,ref:'user',default:null},
     // การชำระเงิน
     silp:{type:String,default:""},
     dateofpayment:{type:Date,default:null}, //วันที่ชำระเงิน
-
+    //วันที่คาดการจะวางบิล
+    datepredictbill:{type:Date,default:null},
+    //วันที่ลูกค้าต้องชำระเงิน
+    datepredictpaybill:{type:Date,default:null},
     
 
   },

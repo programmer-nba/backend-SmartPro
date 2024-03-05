@@ -44,6 +44,12 @@ const purchaseorderSchema = new mongoose.Schema(
       status:{type:String},
       date:{type:Date,default:Date.now()}
     }],default:null},
+    //ข้อมูลเพิ่มเติม
+    warrantyproduct:{type:String,default:""}, //ระยะเวลารับประกันสินค้า
+    deliveryproduct:{type:String,default:""}, //กำหนดการส่งของ
+    paymentproduct:{type:String,default:""}, //เงื่อนไขการชำระเงิน
+    remake:{type:String,default:""}, //หมายเหตุ
+
 	  //เก็บข้อมูล
 	  hscode:{type:String,default:""},
     importtax:{type:Number,default:0},//ภาษีนำเข้า

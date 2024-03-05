@@ -22,6 +22,8 @@ router.put('/:id',auth.procurement,purchaseorder.edit)
 router.delete('/:id',auth.procurement,purchaseorder.delete)
 
 router.put("/admin/accept/:id",auth.adminandmanager,purchaseorder.accept);
+// admin อนุมัติด้วย order
+router.put("/admin/acceptbyorder/:id",auth.adminandmanager,purchaseorder.acceptorder);
 
 router.put("/shipping/:id",auth.procurement,purchaseorder.productshipped);
 router.put("/imageproduct/:id",auth.procurement,purchaseorder.imageproduct);

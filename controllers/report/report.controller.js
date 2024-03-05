@@ -2247,17 +2247,38 @@ module.exports.reportinvoice = async (req,res)=>{
 module.exports.reportcashflow = async (req,res)=>{
   try{
     const id = req.body.id;
+    let date = req.body.date;
     //รายรับ
     const invoicedata= await Invoice.find().populate("account_id").populate("order_id");
     //ข้อมูลรายจ่าย
     const purchaseorderdata = await Purchaseorder.find().populate("quotation_id").populate("sale_id").populate("procurement_id").populate("supplier_id");
     let header = ''
-  
+    let currentMonth = ''
+    let currentYear = ''
+    if(date ==null)
+    {
+      currentMonth = new Date().getMonth() + 1;
+      currentYear = new Date().getFullYear(); 
+    }else
+    {
+     const currentDate =  new Date(req.body.date)
+     currentDate.setDate(currentDate.getDate() + 1);
+
+      currentMonth =currentDate.getMonth() + 1;
+      currentYear = currentDate.getFullYear();
+    }
+    
+    if(id =="cashflow"){
+      header = "report cashflow เดือน"+convertToThaiMonth(currentMonth)+" "+currentYear;
+    }else{
+      header = "report cashflow แบบคาดการณ์ เดือน"+convertToThaiMonth(currentMonth)+" "+currentYear;
+    }
 
      //report รายการรับเงิน - รับจ่าย
      const cashflow = [];
       //ดึงข้อมูลรายจ่าย
-      const purchaseorder = purchaseorderdata.filter((item)=>item?.statusapprove == true);
+
+      const purchaseorder = purchaseorderdata.filter((item)=>item?.statusapprove == true &&   new Date(item.approvedetail[item?.approvedetail.length-1]?.date).getMonth() + 1 == currentMonth && new Date(item.approvedetail[item?.approvedetail.length-1]?.date).getFullYear() == currentYear);
       purchaseorder.forEach((item)=>{
       
         const createdAt = new Date(item?.approvedetail[item?.approvedetail.length-1]?.date);
@@ -2272,7 +2293,7 @@ module.exports.reportcashflow = async (req,res)=>{
         if (weeklyflowIndex !== -1) {
           // ถ้ามีข้อมูลรายเดือนแล้ว
           cashflow[weeklyflowIndex].totalcost += calculatorrate(item?.alltotal,item?.rateprice);
-        
+          cashflow[weeklyflowIndex].ordercost.push(item);
         } else {
           // ถ้ายังไม่มีข้อมูลรายเดือน
           cashflow.push({
@@ -2283,14 +2304,54 @@ module.exports.reportcashflow = async (req,res)=>{
             endDate: endDate,
             //รายจ่าย
             totalcost:calculatorrate(item?.alltotal,item?.rateprice),
+            ordercost:[item],
             //รายรับ
             totalincome:0,
+            orderincome:[],
           });
         }
 
       })
 
-      const invoice = invoicedata.filter((item)=>item?.stauts == "ชำระเงินแล้ว");
+
+      //ดึงข้อมูลรายรับ
+      if(id !="cashflow"){
+        // console.log("คาดการณ์การวางบิล");
+        const predict  = invoicedata.filter((item)=>item?.stauts == "คาดการณ์การวางบิล" && new Date(item?.datepredictpaybill).getMonth() + 1 == currentMonth && new Date(item?.datepredictpaybill).getFullYear() == currentYear);
+        predict.forEach((item)=>{
+          const createdAt = new Date(item?.datepredictpaybill);
+          const year = createdAt.getFullYear();
+          const month = createdAt.getMonth() + 1; // เดือนเริ่มที่ 1
+
+          const weekNumber = getWeek(createdAt);
+          const { startDate, endDate } = getWeekStartAndEndDates(weekNumber);
+          const weeklyflowIndex = cashflow.findIndex(
+            (weekly) => weekly.year === year && weekly.startDate.getTime() === startDate.getTime() && weekly.endDate.getTime() === endDate.getTime()
+          );
+          if (weeklyflowIndex !== -1) {
+            // ถ้ามีข้อมูลรายเดือนแล้ว
+            cashflow[weeklyflowIndex].totalincome += calculatorrate(item?.total,item?.rateprice);
+            cashflow[weeklyflowIndex].orderincome.push(item);
+          } else {
+            // ถ้ายังไม่มีข้อมูลรายเดือน
+            cashflow.push({
+              year: year,
+              month: month,
+              weekNumber: weekNumber,
+              startDate: startDate,
+              endDate: endDate,
+              //รายจ่าย
+              totalcost:0,
+              ordercost:[],
+              //รายรับ
+              totalincome:calculatorrate(item?.total,item?.rateprice),
+              orderincome:[item],
+            });
+          }
+        })  
+      }
+
+      const invoice = invoicedata.filter((item)=>item?.stauts == "ชำระเงินแล้ว" && new Date(item?.dateofpayment).getMonth() + 1 == currentMonth && new Date(item?.dateofpayment).getFullYear() == currentYear);
       invoice.forEach((item)=>{
         const createdAt = new Date(item?.dateofpayment);
         const year = createdAt.getFullYear();
@@ -2304,7 +2365,7 @@ module.exports.reportcashflow = async (req,res)=>{
         if (weeklyflowIndex !== -1) {
           // ถ้ามีข้อมูลรายเดือนแล้ว
           cashflow[weeklyflowIndex].totalincome += calculatorrate(item?.alltotal,item?.rateprice);
-           
+          cashflow[weeklyflowIndex].orderincome.push(item);
         } else {
           // ถ้ายังไม่มีข้อมูลรายเดือน
           cashflow.push({
@@ -2315,18 +2376,15 @@ module.exports.reportcashflow = async (req,res)=>{
             endDate: endDate,
             //รายจ่าย
             totalcost:0,
+            ordercost:[],
             //รายรับ
             totalincome:calculatorrate(item?.total,item?.rateprice),
+            orderincome:[item],
           });
         }
       })
 
-      return res.status(200).json({ status: true,cashflow:cashflow});
-    
-
-   
-   
-   
+      return res.status(200).json({ status: true,header:header,cashflow:cashflow});
     // const cashflowdata = currentdata.filter((item)=>item.);
 
   }catch(error){

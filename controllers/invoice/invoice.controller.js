@@ -5,21 +5,21 @@ const Order = require('../../models/order/order.schema');
 module.exports.openinvoice = async (req, res) => {
     try {
         const id = req.body.id;
+        const date = req.body.date; // วันครบกำหนดชำระเงิน
+        const account_id = req.body.account_id;
         const order =  await Order.findById(id).populate('quotation_id');
         if(!order) 
         {
             return res.status(404).json({status:false , message: "ไม่มีออเดอร์" });
         }
-        
-        // วันครบกำหนดชำระเงิน
-        const date = req.body.date;
-        const account_id = req.body.account_id;
-        const startDate = new Date(new Date().setHours(0, 0, 0, 0)); // เริ่มต้นของวันนี้
-        const endDate = new Date(new Date().setHours(23, 59, 59, 999)); // สิ้นสุดของวันนี้
-        const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-        const referenceNumber = String(await Order.find({ createdAt: { $gte: startDate, $lte: endDate } }).countDocuments()).padStart(5, '0');
-        const refno = `Order${currentDate}${referenceNumber}`;
-        const invoice = new Invoice({
+        if(order.invoiceid ==null)
+        {
+            const startDate = new Date(new Date().setHours(0, 0, 0, 0)); // เริ่มต้นของวันนี้
+            const endDate = new Date(new Date().setHours(23, 59, 59, 999)); // สิ้นสุดของวันนี้
+            const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            const referenceNumber = String(await Order.find({ createdAt: { $gte: startDate, $lte: endDate } }).countDocuments()).padStart(5, '0');
+            const refno = `Order${currentDate}${referenceNumber}`;
+            const invoice = new Invoice({
             order_id:order._id, //(รหัสใบสั่งซื้อ)
             customer_id: order.customer_id ,//(ชื่อลูกค้า)
             contact_id:order.contact_id, //(ชื่อผู้ติดต่อ)
@@ -47,21 +47,44 @@ module.exports.openinvoice = async (req, res) => {
             timeofdelivery: order.deliverydate,//กำหนดส่งของ  
             remark:order.quotation_id.remark,
         
-            stauts:"รอชำระเงิน", 
+            stauts:"รออนุมัติ", 
             dateofpayment:date, //วันที่ชำระเงิน
             account_id:account_id
-        })
-        const savedInvoice = await invoice.save();
-        if (!savedInvoice) return res.status(500).json({status:false, message: "ไม่สามารถเปิดใบแจ้งหนี้ได้" });
-        const updatedOrder = await Order.findByIdAndUpdate(id, { invoiceid: savedInvoice._id, invoicesendstatus: true ,status:"รอจัดส่งให้ลูกค้า" }, { new: true });
-        if (!updatedOrder) return res.status(500).json({ status:false,message: "ไม่สามารถเปิดใบแจ้งหนี้ได้" });
-        return res.status(200).json({ status:true,data:savedInvoice,order:updatedOrder, message: "เปิดใบแจ้งหนี้สำเร็จ" });
-
+            })
+            const savedInvoice = await invoice.save();
+            if (!savedInvoice) return res.status(500).json({status:false, message: "ไม่สามารถเปิดใบแจ้งหนี้ได้" });
+            const updatedOrder = await Order.findByIdAndUpdate(id, { invoiceid: savedInvoice._id, invoicesendstatus: true  }, { new: true });
+            if (!updatedOrder) return res.status(500).json({ status:false,message: "ไม่สามารถเปิดใบแจ้งหนี้ได้" });
+            return res.status(200).json({ status:true,data:savedInvoice,order:updatedOrder, message: "เปิดใบแจ้งหนี้สำเร็จ" });
+        }else{
+            const data ={
+                dateofpayment:date, //วันที่ชำระเงิน
+                account_id:account_id,
+                stauts:"รออนุมัติ",
+            }
+            const invoice = await Invoice.findOneAndUpdate({order_id:id},data,{new:true});
+            if (!invoice) return res.status(500).json({status:false, message: "ไม่สามารถเปิดใบแจ้งหนี้ได้" });
+            const updatedOrder = await Order.findByIdAndUpdate(id, { invoicesendstatus: true  }, { new: true });
+            if (!updatedOrder) return res.status(500).json({ status:false,message: "ไม่สามารถเปิดใบแจ้งหนี้ได้" });
+            return res.status(200).json({ status:true,data:invoice,order:updatedOrder, message: "เปิดใบแจ้งหนี้สำเร็จ" });
+        }
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
 };
 
+//อนุมัติใบแจ้งหนี้และวางบิล
+module.exports.approveinvoice = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const invoice = await Invoice.findByIdAndUpdate(id, { stauts: "รอชำระเงิน" }, { new: true });
+        if (!invoice) return res.status(404).json({ message: "ไม่พบใบแจ้งหนี้" });
+        return res.status(200).json({ status:true,data:invoice, message: "อนุมัติใบแจ้งหนี้สำเร็จ" });
+    }
+    catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
 //get ข้อมูลใบแจ้งหนี้และวางบิล
 module.exports.getinvoice = async (req, res) => {
     try {
@@ -153,3 +176,62 @@ module.exports.paymentnotification = async (req, res) => {
     }
 }
 
+//คาดการ์ณการวางบิล
+module.exports.predictbill = async (req, res) => {
+    try{
+        const id = req.body.id;
+        const order =  await Order.findById(id).populate('quotation_id');
+        if(!order) 
+        {
+            return res.status(404).json({status:false , message: "ไม่มีออเดอร์" });
+        }
+        // วันครบกำหนดชำระเงิน
+        const date = req.body.date;
+        const account_id = req.body.account_id;
+        const startDate = new Date(new Date().setHours(0, 0, 0, 0)); // เริ่มต้นของวันนี้
+        const endDate = new Date(new Date().setHours(23, 59, 59, 999)); // สิ้นสุดของวันนี้
+        const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const referenceNumber = String(await Order.find({ createdAt: { $gte: startDate, $lte: endDate } }).countDocuments()).padStart(5, '0');
+        const refno = `Order${currentDate}${referenceNumber}`;
+        const invoice = new Invoice({
+            order_id:order._id, //(รหัสใบสั่งซื้อ)
+            customer_id: order.customer_id ,//(ชื่อลูกค้า)
+            contact_id:order.contact_id, //(ชื่อผู้ติดต่อ)
+            sale_id :order.sale_id,
+            procurement_id:order.procurement_id,
+
+            refno:refno, //(เลขที่เอกสาร)
+            productdetail:order.quotation_id.productdetail,
+            
+            rate: order.quotation_id.rate,
+            ratename: order.quotation_id.ratename,
+            rateprice: order.quotation_id.rateprice,
+            ratesymbol: order.quotation_id.ratesymbol,
+            ////
+        
+            total:order.quotation_id.priceprofit, //(ราคารวมสินค้า)
+            discount:order.quotation_id.discount, //เพิ่มเข้ามาใหม่
+            tax:order.quotation_id.tax, //(หักภาษี 7 %)
+            alltotal:order.quotation_id.alltotal, //(ราคารวมทั้งหมด)
+            
+            //ส่วนเพิ่มใหม่
+            project: order.quotation_id.project, //ชื่อโปรเจค
+            paymentterm :order.quotation_id.paymentterm, //เงื่อนไขการชำระเงิน
+            timeofdelivery: order.deliverydate,//กำหนดส่งของ  
+            remark:order.quotation_id.remark,
+        
+            stauts:"คาดการณ์การวางบิล", 
+            dateofpayment:date, //วันที่ชำระเงิน
+            account_id:account_id,
+            datepredictbill:req.body.datepredictbill, //วันที่คาดการจะวางบิล
+            datepredictpaybill:req.body.datepredictpaybill,  //วันที่ลูกต้องชำระเงิน
+        })
+        const savedInvoice = await invoice.save();
+        if (!savedInvoice) return res.status(500).json({status:false, message: "ไม่สามารถเปิดใบแจ้งหนี้ได้" });
+        const updatedOrder = await Order.findByIdAndUpdate(id, { invoiceid: savedInvoice._id, invoicesendstatus: true }, { new: true });
+        if (!updatedOrder) return res.status(500).json({ status:false,message: "ไม่สามารถเปิดใบแจ้งหนี้ได้" });
+        return res.status(200).json({ status:true,data:savedInvoice,order:updatedOrder, message: "คาดการณ์การวางบิลสำเร็จ" });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+}

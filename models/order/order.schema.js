@@ -45,6 +45,8 @@ const orderSchema = new mongoose.Schema(
     //ใบแจ้งหนี้และวางบิล
     invoiceid:{type: mongoose.Schema.Types.ObjectId,ref:'invoice',default:null},
     invoicesendstatus:{type:Boolean,default:false},
+    //ใบส่งของ
+    deliverynoteid:{type: mongoose.Schema.Types.ObjectId,ref:'deliverynote',default:null},
 
     //ส่วนของ Logistic
     logistic_id:{type: mongoose.Schema.Types.ObjectId,ref:'user',default:null},
