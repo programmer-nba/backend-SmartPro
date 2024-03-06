@@ -26,6 +26,7 @@ router.put("/admin/accept/:id",auth.adminandmanager,purchaseorder.accept);
 router.put("/admin/acceptbyorder/:id",auth.adminandmanager,purchaseorder.acceptorder);
 
 router.put("/shipping/:id",auth.procurement,purchaseorder.productshipped);
+router.put("/shippingexcel/:id",auth.procurement,purchaseorder.productshippedexcel);
 router.put("/imageproduct/:id",auth.procurement,purchaseorder.imageproduct);
 router.put("/file/:id",auth.procurement,purchaseorder.file);
 
