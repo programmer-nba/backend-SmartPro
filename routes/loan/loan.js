@@ -1,18 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const Loan = require("../../controllers/loan/loan.controller");
-const auth = require("../../authentication/userAuth")
+const newAuth = require("../../authentication/newAuth")
 // สร้างเงินกู้
-router.post("/",auth.account,Loan.createLoan);
+router.post("/",newAuth.loan,Loan.createLoan);
 // get ข้อมูลเงินกู้
-router.get('/byid/:id',auth.all,Loan.getLoanById);
+router.get('/byid/:id',newAuth.all,Loan.getLoanById);
 // getall ข้อมูลเงินกู้
-router.get('/',auth.all,Loan.getLoan);
+router.get('/',newAuth.all,Loan.getLoan);
 // ชำระเงินตามงวด
-router.put('/payment/:id',auth.account,Loan.paymentLoan);
+router.put('/payment/:id',newAuth.loan,Loan.paymentLoan);
 // ชำระเงินทั้งหมด
-router.put('/paymentall/:id',auth.account,Loan.paymentAllLoan);
+router.put('/paymentall/:id',newAuth.loan,Loan.paymentAllLoan);
 // ลบข้อมูลเงินกู้
-router.delete('/:id',auth.account,Loan.deleteLoan)  ;
+router.delete('/:id',newAuth.loan,Loan.deleteLoan)  ;
 
 module.exports = router;

@@ -1,57 +1,58 @@
 const express = require('express');
 const router = express.Router();
 const Report = require("../../controllers/report/report.controller")
-const auth = require("../../authentication/userAuth")
+const newAuth = require("../../authentication/newAuth")
+
 
 //จำนวนใบเสนอราคา
-router.get('/getquotationprice/',auth.all,Report.reportquotationprice)
+router.get('/getquotationprice/',newAuth.reportquotation,Report.reportquotationprice)
 // รายงาน ใบเสนอราคา
-router.get("/getquotation",auth.all,Report.reportquotation)
+router.get("/getquotation",newAuth.reportquotation,Report.reportquotation)
 
-router.post("/getquotation",auth.all,Report.reportquotationbyid)
+router.post("/getquotation",newAuth.reportquotation,Report.reportquotationbyid)
 
 //รายงาน ยอดขาย
-router.post("/getreportprice",auth.all,Report.reportprice)
-router.get("/getreportprice2",auth.all,Report.reportpriceyear)
+router.post("/getreportprice",newAuth.reportprice,Report.reportprice)
+router.get("/getreportprice2",newAuth.reportprice,Report.reportpriceyear)
 //รายงาน sale 
-router.post("/getreportsale",auth.all,Report.reportsaleall)
+router.post("/getreportsale",newAuth.reportsale,Report.reportsaleall)
 // dashboard 
-router.post("/getdashboardadmin",auth.all,Report.dashboardadmin);
+router.post("/getdashboardadmin",newAuth.dashboardadmin,Report.dashboardadmin);
 // dashboard sale
-router.post("/getdashboardsale/",auth.all,Report.dashboardsale);
+router.post("/getdashboardsale/",newAuth.dashboardsale,Report.dashboardsale);
 
 //report การส่งของสินค้าให้ลูกค้า
-router.post("/reportdelivery",auth.all,Report.reportdelivery);
+router.post("/reportdelivery",newAuth.reportdeliverycustomers,Report.reportdelivery);
 //report สินค้าค้างสต็อก
-router.post("/reportstock",auth.all,Report.reportstock);
+router.post("/reportstock",newAuth.reportproductstock,Report.reportstock);
 
 //report supplier
-router.post("/reportsupplier",auth.all,Report.reportsupplier);
+router.post("/reportsupplier",newAuth.reportsupplier,Report.reportsupplier);
 
 //report  กำไรและค่าใช้จ่าย
-router.post("/reportprofit",auth.all,Report.reportprofit);
+router.post("/reportprofit",newAuth.reportprofit,Report.reportprofit);
 
 //report สรุปยอดขายวางบิล
-router.post("/reportbill",auth.all,Report.reportinvoice);
+router.post("/reportbill",newAuth.reportbill,Report.reportinvoice);
 
 //report กำไร -ขาดทุน  และ ค่าภาษีนำเข้า
-router.post("/reportprofitloss",auth.all,Report.reportprofitandloss);
+router.post("/reportprofitloss",newAuth.reportprofit,Report.reportprofitandloss);
 
 //report Cash Flow 
-router.post("/reportcashflow",auth.all,Report.reportcashflow);
+router.post("/reportcashflow",newAuth.reportcashflow,Report.reportcashflow);
 
 
 //report กำไร -ขาดทุน  และ ค่าภาษีนำเข้า
-router.post("/reportprofitlossaccount",auth.all,Report.reportprofitandloss);
+router.post("/reportprofitlossaccount",newAuth.reportprofitlossaccount,Report.reportprofitandloss);
 
 //dashboard  Procurement Department
-router.post("/getdashboardprocurement",auth.all,Report.dashboardprocurement);
+router.post("/getdashboardprocurement",newAuth.dashboardprocurement,Report.dashboardprocurement);
 
 //dashboard  Logistic & Shipping Department
-router.post("/getdashboardlogistic",auth.all,Report.dashboardlogistic);
+router.post("/getdashboardlogistic",newAuth.dashboardlogistic,Report.dashboardlogistic);
 
 //dashboard  Account Department
-router.post("/getdashboardaccount",auth.all,Report.dashboardaccount);
+router.post("/getdashboardaccount",newAuth.dashboardaccount,Report.dashboardaccount);
 
 
 

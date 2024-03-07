@@ -8,7 +8,8 @@ const userSchema = new mongoose.Schema(
     firstname: {type: String, required: true}, // ชื่อจริง
     lastname:{type:String,require:true}, //  นามสกุล
     nickname:{type:String,require:true}, // ชื่อเล่น
-    position:{type:String,require:true}, // ตำแหน่ง
+    // position:{type:String,require:true}, // ตำแหน่ง
+    position:{type:mongoose.Schema.Types.ObjectId,ref:"position"},
     telephone:{type:String},
     image:{type:String,default:null}, // รูปภาพ
     email:{type:String,default:""},

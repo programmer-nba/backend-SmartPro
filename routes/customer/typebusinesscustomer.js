@@ -1,21 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const Typeofbusinesscustomer = require("../../controllers/customer/typebusinesscustomer.controller")
-const auth = require("../../authentication/userAuth")
+
+const newAuth = require("../../authentication/newAuth")
 
 //เพิ่มประเภทธุรกิจ
-router.post('/',auth.all,Typeofbusinesscustomer.add)
+router.post('/',newAuth.typebusinesscustomer,Typeofbusinesscustomer.add)
 
 //ดึงข้อมูลทั้งหมด
-router.get('/',auth.all,Typeofbusinesscustomer.getall)
+router.get('/',newAuth.all,Typeofbusinesscustomer.getall)
 
 //ดึงข้อมูล by id
-router.get('/byid/:id',auth.all,Typeofbusinesscustomer.getbyid)
+router.get('/byid/:id',newAuth.all,Typeofbusinesscustomer.getbyid)
 
 // แก้ไขข้อมูล Typeofbusiness 
-router.put('/:id',auth.all,Typeofbusinesscustomer.edit)
+router.put('/:id',newAuth.typebusinesscustomer,Typeofbusinesscustomer.edit)
 
 // ลบข้อมูล Typeofbusiness
-router.delete('/:id',auth.all,Typeofbusinesscustomer.delete)
+router.delete('/:id',newAuth.typebusinesscustomer,Typeofbusinesscustomer.delete)
 
 module.exports = router;

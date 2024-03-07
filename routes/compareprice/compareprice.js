@@ -1,18 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const compareprice = require("../../controllers/compareprice/compareprice.controller")
-const auth = require("../../authentication/userAuth")
+
+const newauth = require("../../authentication/newAuth")
 
 //เพิ่มใบเปรียบเทียบราคา ของ sale
-router.post('/',auth.sales,compareprice.add)
+router.post('/',newauth.compareprice,compareprice.add)
 //แก้ไขใบเปรียบเทียบราคา  ของ sale
-router.put('/:id',auth.sales,compareprice.editsale)
+router.put('/:id',newauth.compareprice,compareprice.editsale)
 
 //เพิ่มใบเปรียบเทียบราคา  ของ procurement
-router.post('/procurement',auth.procurement,compareprice.addpro)
+router.post('/procurement',newauth.openpurchaseorder,compareprice.addpro)
 
 //แก้ไขใบเปรียบเทียบราคา  ของ procurement
-router.put('/procurement/:id',auth.procurement,compareprice.editpro)
+router.put('/procurement/:id',newauth.openpurchaseorder,compareprice.editpro)
 
 // //เพิ่มใบเปรียบเทียบราคา
 // router.post('/',auth.sales,compareprice.add)

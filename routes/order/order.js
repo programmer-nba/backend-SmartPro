@@ -1,42 +1,38 @@
 const express = require('express');
 const router = express.Router();
 const Order = require("../../controllers/order/order.controller")
-const auth = require("../../authentication/userAuth")
-
+const newAuth = require("../../authentication/newAuth")
 
 
 //ดึงข้อมูลทั้งหมด
-router.get('/',auth.all,Order.getall)
+router.get('/',newAuth.all,Order.getall)
 
 //ดึงข้อมูล by id
-router.get('/byid/:id',auth.all,Order.getbyid)
+router.get('/byid/:id',newAuth.all,Order.getbyid)
 
 // เพิ่มออเดอร์ เมื่อลูกค้าต้องการออเดอร์x
-router.post("/",auth.sales,Order.addorder);
+router.post("/",newAuth.openorder,Order.addorder);
 // แก้ไขออเดอร์ 
-router.put("/:id",auth.sales,Order.editorder);
+router.put("/:id",newAuth.openorder,Order.editorder);
 
 
 //ขายงานผ่าน
-router.put("/approve/:id",auth.sales,Order.acceptdeal);
+router.put("/approve/:id",newAuth.dealwork,Order.acceptdeal);
 
 //ขายงานไม่ผ่าน
-router.put("/unapprove/:id",auth.sales,Order.unacceptdeal);
+router.put("/unapprove/:id",newAuth.dealwork,Order.unacceptdeal);
 
 //เปิดใบสั่งซื้อ
-router.put("/openop/:id",auth.procurement,Order.openop);
-
-//เพิ่มใบสั้่งซื้อตาม ใบเสนอราคา
-router.put("/genpo/:id",auth.procurement,Order.genpo);
+router.put("/openop/:id",newAuth.openpurchaseorder,Order.openop);
 
 
 //จัดส่งสินค้าให้กับลูกค้า
-router.put("/delivery/:id",auth.procurement,Order.delivery);
+router.put("/delivery/:id",newAuth.delivery,Order.delivery);
 //ลูกค้าตรวจสอบสินค้าแล้ว
-router.put("/customercheck/:id",auth.procurement,Order.customercheck);
+router.put("/customercheck/:id",newAuth.delivery,Order.customercheck);
 
 //ดึงข้อมูล by sale_id
-router.get('/bysaleid/:id',auth.all,Order.getbysaleid)
+router.get('/bysaleid/:id',newAuth.all,Order.getbysaleid)
 
 
 

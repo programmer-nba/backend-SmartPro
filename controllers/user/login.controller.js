@@ -17,7 +17,7 @@ module.exports.login = async (req, res) => {
         const password = req.body.password
         
         //เช็คว่า user นี้มีในระบบไหม
-        const login = await User.findOne({username:username})
+        const login = await User.findOne({username:username}).populate("position")
         if(login)
         {
             //เช็ค password
@@ -31,7 +31,8 @@ module.exports.login = async (req, res) => {
                     firstname:login.firstname,
                     lastname:login.lastname,
                     nickname:login.nickname,
-                    position:login.position
+                    position:login.position?.position,
+                    permissions:login.position?.permissions
                 }
                 const secretKey = process.env.SECRET_KEY
                 const token = jwt.sign(payload,secretKey,{expiresIn:"10D"})
@@ -63,7 +64,8 @@ module.exports.getme = async (req,res) =>{
             firstname:decodded.firstname,
             lastname:decodded.lastname,
             nickname:decodded.nickname,
-            position:decodded.position
+            position:decodded.position,
+            permissions:decodded.permissions
         }  
         return res.status(200).send({status:true,data:dataResponse});
     } catch (error) {

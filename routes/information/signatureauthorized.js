@@ -1,18 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const signatureauthorized = require("../../controllers/information/signatureauthorized.controller")
-const auth = require("../../authentication/userAuth")
+const newAuth = require("../../authentication/newAuth")
 
 //เพิ่มลายเซ็นผู้ลงนาม
-router.post('/',auth.verifyTokenadmin,signatureauthorized.add)
+router.post('/',newAuth.information,signatureauthorized.add)
 
 //ดึงข้อมูลทั้งหมด
-router.get('/',auth.all,signatureauthorized.getall)
+router.get('/',newAuth.all,signatureauthorized.getall)
 
 // แก้ไขลายเซ็นผู้ลงนาม
-router.put('/:id',auth.verifyTokenadmin,signatureauthorized.edit)
+router.put('/:id',newAuth.information,signatureauthorized.edit)
 
 // ลบข้อมูลลายเซ็นผู้ลงนาม
-router.delete('/:id',auth.verifyTokenadmin,signatureauthorized.delete)
+router.delete('/:id',newAuth.information,signatureauthorized.delete)
 
 module.exports = router;

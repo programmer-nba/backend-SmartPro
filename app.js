@@ -32,8 +32,6 @@ app.use(prefix+'/user',require('./routes/user/user'))
 //ล็อคอิน
 app.use(prefix+'/login',require('./routes/user/login'))
 
-// brand แบรนด์
-app.use(prefix+'/brand',require("./routes/product/brand"))
 //ประเภทสินค้า
 app.use(prefix+'/producttype',require("./routes/product/producttype"))
 //สินค้า
@@ -53,12 +51,6 @@ app.use(prefix+'/quotation',require("./routes/quotation/quotation"))
 app.use(prefix+'/rate',require("./routes/Rate/Rate"))
 //ประเภทธุรกิจ
 app.use(prefix+'/typeofbusiness',require("./routes/supplier/typeofbusiness"))
-
-//ภาษีนำเข้า
-app.use(prefix+'/importtax',require("./routes/information/importtax"))
-
-//ค่าขนส่ง
-app.use(prefix+'/shipping',require("./routes/information/shipping"))
 // กำไร
 app.use(prefix+'/profit',require("./routes/information/profit"))
 // ใบสั่งซื้อ
@@ -75,14 +67,10 @@ app.use(prefix+'/typelndustry',require("./routes/customer/typeIndustry"))
 app.use(prefix+'/contactcustomer',require("./routes/customer/contactcustomer"))
 //รีพอร์ท 
 app.use(prefix+'/report',require("./routes/report/report"))
-//รีพอร์ท กำไร ยอดขาย
-app.use(prefix+'/report/costAndprofit',require("./routes/report/report.Cost.profit"))
+
 //ค่าคอมมิสชั่น
 app.use(prefix+'/commission',require("./routes/information/commission"))
-//ภาษีนำเข้าของ supplier
-app.use(prefix+"/supplierimporttax",require("./routes/supplier/supplierimporttax"))
-//ค่าขนส่งจากต่างประเทศ
-app.use(prefix+"/suppliershipping",require("./routes/supplier/suppliershipping"))
+
 //เคลมสินค้า
 app.use(prefix+"/insurance",require("./routes/Insurance/Insurance"))
 // ใบแจ้งหนี้ และ วางบิล
@@ -99,6 +87,9 @@ app.use(prefix+"/signatureauthorized",require("./routes/information/signatureaut
 
 //ใบส่งของ
 app.use(prefix+"/deliverynote",require("./routes/deliverynote/deliverynote"))
+
+//postion ตำแหน่ง
+app.use(prefix+"/position",require("./routes/position/position"))
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); // หรือกำหนด origin ที่เฉพาะเจาะจง

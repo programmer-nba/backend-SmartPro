@@ -1,21 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const Invoice = require("../../controllers/invoice/invoice.controller");
-const auth = require("../../authentication/userAuth")
+const newAuth = require("../../authentication/newAuth")
+
 // เปิดใบแจ้งหนี้  และ วางบิล
-router.post("/",auth.account,Invoice.openinvoice);
+router.post("/",newAuth.invoice,Invoice.openinvoice);
 //อนุมัติใบแจ้งหนี้และวางบิล
-router.put('/approve/:id',auth.manager,Invoice.approveinvoice);
+router.put('/approve/:id',newAuth.managerinvoice,Invoice.approveinvoice);
 // get ข้อมูลใบแจ้งหนี้และวางบิล
-router.get('/byid/:id',auth.all,Invoice.getinvoice);
+router.get('/byid/:id',newAuth.all,Invoice.getinvoice);
 // getall ข้อมูลใบแจ้งหนี้และวางบิล  
-router.get('/',auth.all,Invoice.getallinvoice);
+router.get('/',newAuth.all,Invoice.getallinvoice);
 // ลบข้อมูลใบแจ้งหนี้และวางบิล
-router.delete('/:id',auth.account,Invoice.deleteinvoice);
+router.delete('/:id',newAuth.invoice,Invoice.deleteinvoice);
 //แจ้งชำระเงิน
-router.put('/payment/:id',auth.account,Invoice.paymentnotification);
+router.put('/payment/:id',newAuth.invoice,Invoice.paymentnotification);
 
 //คาดการ์ณการวางบิล
-router.post('/predictbill/',auth.account,Invoice.predictbill);
+router.post('/predictbill/',newAuth.invoice,Invoice.predictbill);
 
 module.exports = router;

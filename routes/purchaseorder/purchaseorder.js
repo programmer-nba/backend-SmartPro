@@ -1,36 +1,38 @@
 const express = require('express');
 const router = express.Router();
 const purchaseorder = require("../../controllers/purchaseorder/purchaseorder.controller")
-const auth = require("../../authentication/userAuth")
 
+const newAuth = require("../../authentication/newAuth")
 //เพิ่มใบสั่งซื้อสินค้า
-router.post('/',auth.procurement,purchaseorder.add)
+router.post('/',newAuth.openpurchaseorder,purchaseorder.add)
 
 //ดึงข้อมูลทั้งหมด
-router.get('/',auth.all,purchaseorder.getall)
+router.get('/',newAuth.all,purchaseorder.getall)
 
 //ดึงข้อมูล ตาม  order_id
-router.get("/bypo/:id",auth.all,purchaseorder.getorder)
+router.get("/bypo/:id",newAuth.all,purchaseorder.getorder)
 
 //ดึงข้อมูล by id
-router.get('/byid/:id',auth.all,purchaseorder.getbyid)
+router.get('/byid/:id',newAuth.all,purchaseorder.getbyid)
 
 //แก้ไขข้อมูลใบสั่งซื้อสินค้า
-router.put('/:id',auth.procurement,purchaseorder.edit)
+router.put('/:id',newAuth.openpurchaseorder,purchaseorder.edit)
 
 //ลบข้อมูลใบสั่งซื้อสินค้า
-router.delete('/:id',auth.procurement,purchaseorder.delete)
+router.delete('/:id',newAuth.openpurchaseorder,purchaseorder.delete)
 
-router.put("/admin/accept/:id",auth.adminandmanager,purchaseorder.accept);
+
+
+router.put("/admin/accept/:id",newAuth.managerpurchaseorder,purchaseorder.accept);
 // admin อนุมัติด้วย order
-router.put("/admin/acceptbyorder/:id",auth.adminandmanager,purchaseorder.acceptorder);
+router.put("/admin/acceptbyorder/:id",newAuth.managerpurchaseorder,purchaseorder.acceptorder);
 
-router.put("/shipping/:id",auth.procurement,purchaseorder.productshipped);
-router.put("/imageproduct/:id",auth.procurement,purchaseorder.imageproduct);
-router.put("/file/:id",auth.procurement,purchaseorder.file);
+router.put("/shipping/:id",newAuth.openpurchaseorder,purchaseorder.productshipped);
+router.put("/imageproduct/:id",newAuth.openpurchaseorder,purchaseorder.imageproduct);
+router.put("/file/:id",newAuth.openpurchaseorder,purchaseorder.file);
 
 
 //เพิ่มใบสั่งซื้อสินค้าจาก ใบเปรียบเทียบราคา
-router.post("/fromcompare",auth.procurement,purchaseorder.createpo)
+router.post("/fromcompare",newAuth.openpurchaseorder,purchaseorder.createpo)
 
 module.exports = router;

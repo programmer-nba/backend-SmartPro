@@ -53,6 +53,7 @@ module.exports.add = async (req, res) => {
         return res.status(400).send({ status: false, message: "กรุณากรอก nickname" });
       }
       if (req.body.position === undefined || req.body.position === "") {
+
         return res.status(400).send({ status: false, message: "กรุณากรอก position" });
       }
       //หาว่า user ซ้ำกันไหม
@@ -146,7 +147,7 @@ module.exports.addexcel = async (req, res) => {
 //ดึงข้อมูลทั้งหมด
 module.exports.getall = async (req, res) => {
   try {
-    const userdata = await User.find();
+    const userdata = await User.find().populate("position");
     if (!userdata) {
       return res.status(404).send({ status: false, message: "ไม่มีข้อมูล user" });
     }
@@ -159,7 +160,7 @@ module.exports.getall = async (req, res) => {
 //ดึงข้อมูล by id
 module.exports.getbyid = async (req, res) => {
   try {
-    const userdata = await User.findOne({ _id: req.params.id });
+    const userdata = await User.findOne({ _id: req.params.id }).populate("position");
     if (!userdata) {
       return res.status(404).send({ status: false, message: "ไม่มีข้อมูล admin" });
     }

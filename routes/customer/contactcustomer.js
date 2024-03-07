@@ -1,27 +1,28 @@
 const express = require('express');
 const router = express.Router();
 const contactcustomer = require("../../controllers/customer/contactcustomer.controller")
-const auth = require("../../authentication/userAuth")
+
+const newAuth = require("../../authentication/newAuth")
 
 //เพิ่มผู้ติดต่อ
-router.post('/',auth.sales,contactcustomer.add)
+router.post('/',newAuth.customer,contactcustomer.add)
 //เพิ่มผู้ติดต่อจาก excel
-router.post('/excel',auth.sales,contactcustomer.addexcel)
+router.post('/excel',newAuth.customer,contactcustomer.addexcel)
 
 //ดึงข้อมูลทั้งหมด
-router.get('/',auth.all,contactcustomer.getall)
+router.get('/',newAuth.all,contactcustomer.getall)
 
 //ดึงข้อมูล by id
-router.get('/byid/:id',auth.all,contactcustomer.getbyid)
+router.get('/byid/:id',newAuth.all,contactcustomer.getbyid)
 
 //ดึงข้อมูล by customer
-router.get('/bycustomer/:id',auth.all,contactcustomer.getbycutomer)
+router.get('/bycustomer/:id',newAuth.all,contactcustomer.getbycutomer)
 
 //แก้ไขข้อมูลผู้ติดต่อ
-router.put('/:id',auth.sales,contactcustomer.edit)
+router.put('/:id',newAuth.customer,contactcustomer.edit)
 
 //ลบข้อมูลผู้ติดต่อ
-router.delete('/:id',auth.sales,contactcustomer.delete)
+router.delete('/:id',newAuth.customer,contactcustomer.delete)
 
 //ดึงข้อมูล by sale_id
 

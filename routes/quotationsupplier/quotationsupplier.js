@@ -1,30 +1,30 @@
 const express = require('express');
 const router = express.Router();
 const quotationsupplier = require("../../controllers/quotationsupplier/quotationsupplier.controller")
-const auth = require("../../authentication/userAuth")
+const newAuth = require("../../authentication/newAuth")
 
-//เพิ่มใบเสนอราคา
-router.post('/',auth.all,quotationsupplier.add)
+//เพิ่มใบเสนอราคาจาก supplier
+router.post('/',newAuth.supplier,quotationsupplier.add)
 //เพิ่มใบเสนอราคา จาก excel
-router.post('/addexcel',auth.all,quotationsupplier.addexcel)
+router.post('/addexcel',newAuth.supplier,quotationsupplier.addexcel)
 
 //ดึงข้อมูลทั้งหมด
-router.get('/',auth.all,quotationsupplier.getall)
+router.get('/',newAuth.all,quotationsupplier.getall)
 
 //ดึงข้อมูล by id
-router.get('/byid/:id',auth.all,quotationsupplier.getbyid)
+router.get('/byid/:id',newAuth.all,quotationsupplier.getbyid)
 //ดึงข้อมูล by supplier
-router.get('/bysupplier/:id',auth.all,quotationsupplier.getbysupplier)
+router.get('/bysupplier/:id',newAuth.all,quotationsupplier.getbysupplier)
 //แก้ไขข้อมูลใบเสนอราคา
-router.put('/:id',auth.all,quotationsupplier.edit)
+router.put('/:id',newAuth.supplier,quotationsupplier.edit)
 
 //ลบข้อมูลใบเสนอราคา
-router.delete('/:id',auth.all,quotationsupplier.delete)
+router.delete('/:id',newAuth.supplier,quotationsupplier.delete)
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
-router.put("/quotationfile/:id",auth.all,quotationsupplier.addfilequotation)
-router.put("/email/:id",auth.all,quotationsupplier.addfileemail)
+router.put("/quotationfile/:id",newAuth.supplier,quotationsupplier.addfilequotation)
+router.put("/email/:id",newAuth.supplier,quotationsupplier.addfileemail)
 //ดึงใบเสนอราคา supplier และ product มาด้วย
-router.get("/allproduct/",auth.all,quotationsupplier.getbyproduct)
+router.get("/allproduct/",newAuth.supplier,quotationsupplier.getbyproduct)
 //
-router.get("/getbysupplierproduct/:id",auth.all,quotationsupplier.getbysupplierproduct);
+router.get("/getbysupplierproduct/:id",newAuth.supplier,quotationsupplier.getbysupplierproduct);
 module.exports = router;

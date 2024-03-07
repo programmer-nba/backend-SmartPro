@@ -1,21 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const TypeIndustry = require("../../controllers/customer/typeIndustry.controller")
-const auth = require("../../authentication/userAuth")
 
+const newAuth = require("../../authentication/newAuth")
 //เพิ่มประเภทอุสาหกรรม
-router.post('/',auth.all,TypeIndustry.add)
+router.post('/',newAuth.typelndustry,TypeIndustry.add)
 
 //ดึงข้อมูลทั้งหมด
-router.get('/',auth.all,TypeIndustry.getall)
+router.get('/',newAuth.all,TypeIndustry.getall)
 
 //ดึงข้อมูล by id
-router.get('/byid/:id',auth.all,TypeIndustry.getbyid)
+router.get('/byid/:id',newAuth.all,TypeIndustry.getbyid)
 
-// แก้ไขข้อมูล Typeofbusiness 
-router.put('/:id',auth.all,TypeIndustry.edit)
+// แก้ไขข้อมูลประเภทอุสาหกรรม
+router.put('/:id',newAuth.typelndustry,TypeIndustry.edit)
 
-// ลบข้อมูล Typeofbusiness
-router.delete('/:id',auth.all,TypeIndustry.delete)
+// ลบข้อมูลประเภทอุสาหกรรม
+router.delete('/:id',newAuth.typelndustry,TypeIndustry.delete)
 
 module.exports = router;

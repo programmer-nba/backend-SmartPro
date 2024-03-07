@@ -1,20 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const productsupplier = require("../../controllers/supplier/productsupplier.controller")
-const auth = require("../../authentication/userAuth")
+const newAuth = require("../../authentication/newAuth")
+
 
 //เพิ่ม productsupplier
-router.post('/one/:id',auth.all,productsupplier.add)
+router.post('/one/:id',newAuth.supplier,productsupplier.add)
 //เพิ่มสินค้าที่ละเยอะๆๆ
-router.post('/many/:id',auth.all,productsupplier.addmany)
+router.post('/many/:id',newAuth.supplier,productsupplier.addmany)
 
 //ดึงข้อมูลตาม  supplier_id
-router.get('/byid/:id',auth.all,productsupplier.getbyid)
+router.get('/byid/:id',newAuth.all,productsupplier.getbyid)
 
 // แก้ไขข้อมูล productsupplier 
-router.put('/:id',auth.all,productsupplier.edit)
+router.put('/:id',newAuth.supplier,productsupplier.edit)
 
 // ลบข้อมูล productsupplier
-router.delete('/:id',auth.all,productsupplier.delete)
+router.delete('/:id',newAuth.supplier,productsupplier.delete)
 
 module.exports = router;

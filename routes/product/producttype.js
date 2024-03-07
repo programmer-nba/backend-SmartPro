@@ -1,21 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const producttype = require("../../controllers/product/producttype.controller")
-const auth = require("../../authentication/userAuth")
+const newAuth = require("../../authentication/newAuth")
 
 //เพิ่มประเภทสินค้า
-router.post('/',auth.all,producttype.add)
+router.post('/',newAuth.typeproduct,producttype.add)
 
 //ดึงข้อมูลทั้งหมด
-router.get('/',auth.all,producttype.getall)
+router.get('/',newAuth.all,producttype.getall)
 
 //ดึงข้อมูล by id
-router.get('/byid/:id',auth.all,producttype.getbyid)
+router.get('/byid/:id',newAuth.all,producttype.getbyid)
 
 //แก้ไขข้อมูลประเภทสินค้า
-router.put('/:id',auth.all,producttype.edit)
+router.put('/:id',newAuth.typeproduct,producttype.edit)
 
 //ลบข้อมูลประเภทสินค้า
-router.delete('/:id',auth.all,producttype.delete)
+router.delete('/:id',newAuth.typeproduct,producttype.delete)
 
 module.exports = router;

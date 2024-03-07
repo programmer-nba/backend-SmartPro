@@ -1,5 +1,4 @@
 const Product = require("../../models/product/product.schema");
-const Brand = require("../../models/product/brand.schema")
 const Producttype = require("../../models/product/producttype.schema")
 const multer = require("multer");
 const {

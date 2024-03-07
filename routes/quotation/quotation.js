@@ -1,28 +1,28 @@
 const express = require('express');
 const router = express.Router();
 const quotation = require("../../controllers/quotation/quotation.controller")
-const auth = require("../../authentication/userAuth")
+const newAuth = require("../../authentication/newAuth")
 
-//เพิ่มใบเปรียบเทียบราคา
-router.post('/',auth.sales,quotation.add)
+//เพิ่มใบเสนอราคา
+router.post('/',newAuth.quotation,quotation.add)
 
 //ดึงข้อมูลทั้งหมด
-router.get('/',auth.all,quotation.getall)
+router.get('/',newAuth.all,quotation.getall)
 
 //ดึงข้อมูล ตาม id ลูกค้า
-router.get("/bycustomer/:id",auth.all,quotation.getcustomer)
+router.get("/bycustomer/:id",newAuth.all,quotation.getcustomer)
 
 //ดึงข้อมูล by id
-router.get('/byid/:id',auth.all,quotation.getbyid)
+router.get('/byid/:id',newAuth.all,quotation.getbyid)
 
-//แก้ไขข้อมูลใบเปรียบเทียบราคา
-router.put('/:id',auth.sales,quotation.edit)
+//แก้ไขข้อมูลใบเสนอราคา
+router.put('/:id',newAuth.quotation,quotation.edit)
 
-//ลบข้อมูลใบเปรียบเทียบราคา
-router.delete('/:id',auth.sales,quotation.delete)
+//ลบข้อมูลใบเสนอราคา
+router.delete('/:id',newAuth.quotation,quotation.delete)
 
 //admin อนุมัติ
-router.put("/admin/accept/:id",auth.adminandmanager,quotation.accept)
+router.put("/admin/accept/:id",newAuth.managerquotation,quotation.accept)
 
 // //ดึงข้อมูลเฉพาะ ที่ admin อนุมัติให้ออกใบแล้ว
 // router.get("/getaccept/",auth.all,quotation.getaccept)
