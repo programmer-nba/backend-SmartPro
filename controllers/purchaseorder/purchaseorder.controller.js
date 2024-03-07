@@ -293,6 +293,90 @@ module.exports.productshipped = async (req,res) =>{
   }
 }
 
+//excel สินค้ามาจัดส่งแล้ว
+module.exports.productshippedexcel = async (req,res) =>{
+  try{
+    const id = req.params.id;
+    const productshipped = await Purchaseorder.findOne({refno:id});
+    if(productshipped == undefined)
+    {
+      return res.status(404).send({ status: false, message: "ไม่มีข้อมูลใบสั่งซื้อนี้" });
+    }
+
+    if(productshipped?.shippingdetail[productshipped?.shippingdetail.length-1]?.status != "รอการจัดส่ง")
+    {
+      return res.status(400).send({ status: false, message: "ข้อมูลนี้ไม่อยู่ในสถานะรอการจัดส่ง" });
+    }
+    const {hscode,importtax,shippingcost,operationcost,serialnumber,dateget,warranty,deliverystatus} = req.body;
+    productshipped?.shippingdetail.push({status:"จัดส่งแล้ว",date:Date.now()})
+
+    const data ={
+      statusshipping:true,
+      hscode:hscode,
+      importtax:importtax,
+      shippingcost:shippingcost,
+      operationcost:operationcost,
+      serialnumber:serialnumber,
+      dateget:dateget,
+      warranty:warranty,
+      statusshippingcustomer:false,
+      deliverystatus:deliverystatus,
+      shippingdetail:productshipped?.shippingdetail,
+    }
+    const edit = await Purchaseorder.findOneAndUpdate({refno:id},data,{new:true});
+    const checkstatusorder = await Purchaseorder.find({order_id:edit?.order_id,statusshipping:false})
+    if(checkstatusorder.length == 0){
+      
+      const order = await Order.findById(edit?.order_id).populate('quotation_id'); 
+      const deliverynote = new Deliverynote({
+        customer_id:order?.customer_id,//(ชื่อลูกค้า)
+        contact_id:order?.contact_id,//(ชื่อผู้ติดต่อ)
+        order_id:order?._id, //(รหัสใบสั่งซื้อ)
+        reforder:order?.reforder, //(เลขที่เอกสาร)
+        date :Date.now(), //(วันที่ลงเอกสาร)
+        productdetail: order?.quotation_id?.productdetail,
+        ////
+        rate:order?.quotation_id?.rate,
+        ratename:order?.quotation_id?.ratename,
+        rateprice:order?.quotation_id?.rateprice,
+        ratesymbol:order?.quotation_id?.ratesymbol,
+        ////
+        warranty:order?.quotation_id?.warranty, //ประกัน
+        timeofdelivery: order?.quotation_id?.timeofdelivery ,//กำหนดส่งของ
+        paymentterm :order?.quotation_id?.paymentterm, //เงื่อนไขการชำระเงิน
+        remark:order?.quotation_id?.remark,
+        //
+        total:order?.quotation_id?.total, //(ราคารวมสินค้า)
+        priceprofit:order?.quotation_id?.priceprofit, // ราคา +กำไรแล้ว
+        profitpercent:order?.quotation_id?.profitpercent, // ค่าเปอร์เซ็นต์ดำเนินการ
+        profit:order?.quotation_id?.profit, // กำไร
+        //
+        tax:order?.quotation_id?.tax, //(หักภาษี 7 %)
+        alltotal:order?.quotation_id?.alltotal, //(ราคารวมทั้งหมด)
+        //ส่วนเพิ่มใหม่
+        project: order?.quotation_id?.project,
+        discount:order?.quotation_id?.discount, //เพิ่มเข้ามาใหม่
+        totalprofit:order?.quotation_id?.totalprofit, //กำไรที่ - กับส่วนลดแล้ว
+        ////
+        status:false,
+        statusdetail:[{
+          status:"รออนุมัติ",
+          date:Date.now(),
+        }],
+      })
+      const adddeliverynote = await deliverynote.save();
+      const editdata = await Order.findByIdAndUpdate(edit?.order_id,{ status:"รออนุมัติใบส่งของ",deliverynoteid:adddeliverynote?._id},{new:true})
+      
+    }
+
+    return res.status(200).send({ status: true,message:"คุณได้รับสินค้าแล้ว", data: edit });
+  } catch(error){
+    return res.status(500).send({ status: false, error: error.message });
+  }
+}
+
+
+
 const multer = require("multer");
 const {
   uploadFileCreate,

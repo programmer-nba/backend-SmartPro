@@ -27,9 +27,12 @@ router.put("/admin/accept/:id",newAuth.managerpurchaseorder,purchaseorder.accept
 // admin อนุมัติด้วย order
 router.put("/admin/acceptbyorder/:id",newAuth.managerpurchaseorder,purchaseorder.acceptorder);
 
+
 router.put("/shipping/:id",newAuth.openpurchaseorder,purchaseorder.productshipped);
+router.put("/shippingexcel/:id",newAuth.openpurchaseorder,purchaseorder.productshippedexcel);
 router.put("/imageproduct/:id",newAuth.openpurchaseorder,purchaseorder.imageproduct);
 router.put("/file/:id",newAuth.openpurchaseorder,purchaseorder.file);
+
 
 
 //เพิ่มใบสั่งซื้อสินค้าจาก ใบเปรียบเทียบราคา
