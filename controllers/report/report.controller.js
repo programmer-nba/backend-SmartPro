@@ -1365,7 +1365,7 @@ module.exports.dashboardsale = async (req,res)=>{
   try{
       const id = req.body.id;
       const sale_id = req.body.user_id;
-      const user = await User.findById(sale_id);
+      const user = await User.findById(sale_id).populate('position');
       const orderdata = await Order.find({sale_id:sale_id}).populate("quotation_id").populate("sale_id").populate("customer_id");;
       let header = ''
       let currentdata = ''
@@ -2581,7 +2581,7 @@ module.exports.dashboardprocurement = async (req,res)=>{
     try{
       const id = req.body.id;
       const procurement_id = req.body.user_id;
-      const procurement = await User.findById(procurement_id);
+      const procurement = await User.findById(procurement_id).populate('position');
       const purchaseorder = await Purchaseorder.find({procurement_id:procurement_id}).populate("quotation_id").populate("sale_id").populate("procurement_id");
       let header = ''
       let currentdata = ''
@@ -2663,7 +2663,7 @@ module.exports.dashboardlogistic = async (req,res)=>{
   try{
     const id = req.body.id;
     const logistic_id = req.body.user_id;
-    const logistic = await User.findById(logistic_id);
+    const logistic = await User.findById(logistic_id).populate('position');;
     const orderdata = await Order.find().populate("quotation_id").populate("sale_id")
     .populate("customer_id").populate("procurement_id").populate("purchaseorder._id")
     .populate({
@@ -2744,7 +2744,7 @@ module.exports.dashboardaccount = async (req,res)=>{
   try{
     const id = req.body.id;
     const account_id = req.body.user_id;
-    const account = await User.findById(account_id);
+    const account = await User.findById(account_id).populate('position');
     const orderdata = await Order.find().populate("quotation_id").populate("sale_id")
     .populate("customer_id").populate("procurement_id").populate("purchaseorder._id")
     .populate({
